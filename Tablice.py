@@ -11,7 +11,7 @@ import os
 
 from collections import namedtuple
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
-
+text_file = open("Output.txt", "w")
 
 def area(a, b):  # returns None if rectangles don't intersect
     dx = min(a.xmax, b.xmax) - max(a.xmin, b.xmin)
@@ -27,7 +27,8 @@ for filename in os.listdir("Slike"):
     #orig=cv.imread("Slike/IEB-2949.jpg")
     orig=cv.imread("Slike/{0}".format(filename),1)
     
-    broj=os.listdir("Slike").index(filename)   
+    broj=os.listdir("Slike").index(filename)  
+    text_file.write(str(broj)+"\n") 
     print(broj)
     img=orig.copy()
     prikaz=orig.copy()
@@ -146,7 +147,7 @@ for filename in os.listdir("Slike"):
         if(score!=0):
             (x,y,w,h) = cv2.boundingRect(contour)
             tester=orig[y:y+h,x:x+w]
-            #text=pytesseract.image_to_string(tester)
+            #
             if(score>maxscore):
                 maxscore,tablica=score,contour
           
@@ -166,10 +167,12 @@ for filename in os.listdir("Slike"):
 
     final=orig.copy()
     final=cv.cvtColor(final,cv.COLOR_BGR2RGB)
-
+    text=pytesseract.image_to_string(orig)
+    print(text)
+    text_file.write(text+"\n") 
     origslika=Image.fromarray(orig)
     origslika.save("C:\\Users\\T420\\Documents\\GitHub\\Tablice\\Rezultati\\"+str(broj)+"_tablica.jpg")
     #plt.figure()
     #plt.imshow(final) 
     #plt.show()
-    
+text_file.close()    
