@@ -7,7 +7,6 @@ Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
 def text_detection(img, minc):
 
-	orig = img.copy()
 	(H, W) = img.shape[:2]
 
 	(newW, newH) = (320, 320)
@@ -68,9 +67,8 @@ def text_detection(img, minc):
 
 	for (startX, startY, endX, endY) in boxes:
 		startX = int(startX * rW)
-		startY = int(startY * rH)
+		startY = int(startY * rH)-3
 		endX = int(endX * rW)
-		endY = int(endY * rH)
-		a=Rectangle(startX,startY,endX,endY)
-		output.append(a)
+		endY = int(endY * rH)+8
+		output.append((startX,startY,endX,endY))
 	return output
