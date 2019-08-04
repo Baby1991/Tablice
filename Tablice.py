@@ -3,108 +3,173 @@ import cv2
 import matplotlib.pyplot as plt
 import pytesseract
 import numpy as np
+import text_detection
+from PIL import Image
+
 
 import os
 
-#for filename in os.listdir("Slike"):
-for i in range(1,2): 
-    orig=cv.imread("Slike/YOO-5657.jpg")
-    #orig=cv.imread("Slike/{0}".format(filename),1)
-        
-    #img=cv.threshold(img,127,255,1)
-    #img=cv.blur(img,(10,10))
-    img=orig
-    hist,bins = np.histogram(img.flatten(),256,[0,256]) 
-    cdf = hist.cumsum()
-    cdf_normalized = cdf * hist.max()/ cdf.max()
-    cdf_m = np.ma.masked_equal(cdf,0)
-    cdf_m = (cdf_m - cdf_m.min())*255/(cdf_m.max()-cdf_m.min())
-    cdf = np.ma.filled(cdf_m,0).astype('uint8')
-    img2 = cdf[img]
+from collections import namedtuple
+Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
-    img2 = cv.cvtColor(img2, cv.COLOR_BGR2GRAY)
-    meanbright,_,_,_=cv.mean(img2)
-    thres1, img21 = cv2.threshold(img2, meanbright, 255, 3)
+
+def area(a, b):  # returns None if rectangles don't intersect
+    dx = min(a.xmax, b.xmax) - max(a.xmin, b.xmin)
+    dy = min(a.ymax, b.ymax) - max(a.ymin, b.ymin)
+    if (dx>=0) and (dy>=0):
+        return dx*dy
+    else:
+        return 0
+
+
+for filename in os.listdir("Slike"):
+#for i in range(1,2): 
+    #orig=cv.imread("Slike/IEB-2949.jpg")
+    orig=cv.imread("Slike/{0}".format(filename),1)
+    
+    broj=os.listdir("Slike").index(filename)   
+    print(broj)
+    img=orig.copy()
+    prikaz=orig.copy()
+    #text=orig.copy()
+
+    textboxes=[]
+    textboxes=text_detection.text_detection(img,0.999)
+    for r in textboxes:
+        cv.rectangle(prikaz, (r.xmin,r.ymin), (r.xmax,r.ymax), (255,255,0), 2)
+
+    """
+    plt.figure()
+    plt.imshow(text)
+    plt.show()
+    """
+
 
     img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    cv.normalize(img, img, 0, 255, cv.NORM_MINMAX)
     meanbright,_,_,_=cv.mean(img)
-    thres1, img1 = cv2.threshold(img2, meanbright, 255, 3)
+
+
+    #img=cv.blur(img,(3,3))
+
+    thres1, img1 = cv2.threshold(img, meanbright/2, 255, 3)
+
+    #img1=cv.blur(img1,(3,3))
+
     img1=cv.Canny(img1,100,200,10)
 
 
-    #img21=cv.Canny(img21,100,200,10)
-    #img21=cv.fastNlMeansDenoising(img21)
-
-    #img3=cv.add(img1,img11)
-    #img3=cv.bitwise_and(img1,img11)
-    #img3=cv.fastNlMeansDenoising(img3)
-    img3=img1
-    #plt.imshow(img21)  
-    #plt.show()
-    #plt.imshow(img1)  
-    #plt.show()
+    img1=cv.blur(img1,(3,3))
+    img1 = cv2.erode(img1, (5,5),10)
     
-    img3=cv.blur(img3,(3,3))
-    img3 = cv2.erode(img3, (5,5),10)
+    #img1=cv.blur(img1,(3,3))
+    #img1 = cv2.erode(img1, (5,5),10)
 
+    img1slika=Image.fromarray(img1)
+    img1slika.save("C:\\Users\\T420\\Documents\\GitHub\\Tablice\\Rezultati\\"+str(broj)+"_edz.jpg")
     
-    #plt.imshow(img3)  
-    #plt.show()
     
-
-
-
-
     
-
-    (contours,__)=cv.findContours( img3, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
+    (contours,__)=cv.findContours( img1, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
     (x1,y1,w1,h1)=(0,0,0,0)
-    prikaz=orig
+    
 
     dobrekonture=[]
+    mogucetablice=[(0,0)]
     
     for contour in contours:
+
         (x,y,w,h) = cv2.boundingRect(contour)
         tester=orig[y:y+h,x:x+w]
         tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
         (meanbright1,__,__,__)=cv.mean(tester)
         
-        if 3<=(w/h)<=4.7:
-        #if 1==1: 
+        
+
+        if 3<=(w/h)<=6 and 100<=w<=300:
+            cv.drawContours(prikaz, contour, -1, (0,0,255), 3)
             cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
-            if meanbright1>=meanbright and w>150:
+            if meanbright1>=meanbright/3:
                 cv2.rectangle(prikaz, (x,y), (x+w,y+h), (255,0,0), 2)
                 dobrekonture.append(contour)
-                #if(w>w1 and h>h1):
-                #   (x1,y1,w1,h1)=(x,y,w,h)
+                
     
     
     font = cv2.FONT_HERSHEY_SIMPLEX
     imgbw=cv.cvtColor(orig,cv.COLOR_BGR2GRAY)
-    #cv2.rectangle(orig, (x1,y1), (x1+w1,y1+h1), (0,0,0), 2)
-    for contour in dobrekonture:
-        (x,y,w,h) = cv2.boundingRect(contour)
-        index=dobrekonture.index(contour)
-        cv2.putText(prikaz,str(index),(x,y), font, 1,(0,0,0),2,cv2.LINE_AA)
-        tester=imgbw[y:y+h,x:x+w]
-        #color = ('b','g','r')
-        color=('b')
-        plt.figure()
-        for i,col in enumerate(color):
-            histr = cv2.calcHist([tester],[i],None,[256],[0,256])
-            plt.plot(histr,color = col)
-            plt.xlim([0,256])
-            plt.legend(str(index))
-        #plt.show()
+    
+    try:
+        for contour in dobrekonture:
+            A=0
+            score=0
+            (x,y,w,h) = cv2.boundingRect(contour)
+            index=dobrekonture.index(contour)
+            cv2.putText(prikaz,str(index),(x,y), font, 1,(0,0,0),2,cv2.LINE_AA)
+            tester=imgbw[y:y+h,x:x+w]
+            bound=Rectangle(x,y,x+w,y+h)
+            boundarea=w*h
+            histr = cv2.calcHist([tester],[0],None,[256],[0,256])
+            #plt.figure()
+            #plt.plot(histr,color = 'b')
+            #plt.xlim([0,256])
+            #plt.legend(str(index))
+            beli=sum(histr[128:255])
+            crni=sum(histr[0:127])
 
+            if crni>0:
+                odnos=beli/crni
+            else:
+                odnos=0
+
+            for r in textboxes:
+                A=A+area(r,bound)
+            
+            if odnos>5:
+                odnos=0
+            
+            score=A/boundarea*100+odnos*10+w/100
+            cv2.putText(prikaz,str(odnos),(x+30,y), font, 0.8,(0,0,0),2,cv2.LINE_AA,)
+            #if(odnos>=0.1):
+            mogucetablice.append((score,contour))
+            pass
+    except:
+        print("ovo je autizam")
+    """
     plt.figure()
     plt.imshow(prikaz) 
     plt.show()
     """
-    orig=orig[y1:y1+h1,x1:x1+w1]
-    #print(pytesseract.image_to_string(img))
+    prikazslika=Image.fromarray(prikaz)
+    prikazslika.save("C:\\Users\\T420\\Documents\\GitHub\\Tablice\\Rezultati\\"+str(broj)+"_detekcija.jpg")
+    maxscore,tablica=mogucetablice[0]
+    for (score,contour) in mogucetablice:
+        if(score!=0):
+            (x,y,w,h) = cv2.boundingRect(contour)
+            tester=orig[y:y+h,x:x+w]
+            #text=pytesseract.image_to_string(tester)
+            if(score>maxscore):
+                maxscore,tablica=score,contour
+          
+    
+
+
+    #orig=cv.imread("Slike/{0}".format(filename),1)
+    #orig=cv.imread("Slike/IEB-2949.jpg")
     orig = cv.cvtColor(orig, cv.COLOR_BGR2RGB)
-    plt.figure()
-    plt.imshow(orig) 
-    plt.show()
-    """
+
+    try:
+        (x1,y1,w1,h1) = cv2.boundingRect(tablica)
+        orig=orig[y1:y1+h1,x1:x1+w1]
+        raise
+    except:
+        cv2.putText(orig,"OVO JE LOS PROGRAM!!!!",(10,300), font, 2,(255,0,0),10,cv2.LINE_AA)
+
+    final=orig.copy()
+    final=cv.cvtColor(final,cv.COLOR_BGR2RGB)
+
+    origslika=Image.fromarray(orig)
+    origslika.save("C:\\Users\\T420\\Documents\\GitHub\\Tablice\\Rezultati\\"+str(broj)+"_tablica.jpg")
+    #plt.figure()
+    #plt.imshow(final) 
+    #plt.show()
+    
