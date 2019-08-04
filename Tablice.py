@@ -13,7 +13,7 @@ from collections import namedtuple
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 text_file = open("Output.txt", "w")
 
-def area(a, b):  # returns None if rectangles don't intersect
+def area(a, b):
     dx = min(a.xmax, b.xmax) - max(a.xmin, b.xmin)
     dy = min(a.ymax, b.ymax) - max(a.ymin, b.ymin)
     if (dx>=0) and (dy>=0):
@@ -26,19 +26,16 @@ for filename in os.listdir("Slike"):
 #for i in range(1,2): 
     #orig=cv.imread("Slike/IEB-2949.jpg")
     orig=cv.imread("Slike/{0}".format(filename),1)
-    
     broj=os.listdir("Slike").index(filename)  
     text_file.write(str(broj)+"\n") 
     print(broj)
+
     img=orig.copy()
     prikaz=orig.copy()
-    #text=orig.copy()
 
     textboxes=[]
     textboxes=text_detection.text_detection(img,0.999)
-    for r in textboxes:
-        cv.rectangle(prikaz, (r.xmin,r.ymin), (r.xmax,r.ymax), (255,255,0), 2)
-
+    
     """
     plt.figure()
     plt.imshow(text)
@@ -51,17 +48,22 @@ for filename in os.listdir("Slike"):
     meanbright,_,_,_=cv.mean(img)
 
 
-    #img=cv.blur(img,(3,3))
+    img=cv.blur(img,(3,3))
+    thres1, img1 = cv2.threshold(img, meanbright, 255, 0)
 
-    thres1, img1 = cv2.threshold(img, meanbright/2, 255, 3)
+    #thres1, img1 = cv2.threshold(img, meanbright, 255, 3)
 
     #img1=cv.blur(img1,(3,3))
 
-    img1=cv.Canny(img1,100,200,10)
+    img1=cv.Canny(img,100,200,10)
 
 
-    img1=cv.blur(img1,(3,3))
-    img1 = cv2.erode(img1, (5,5),10)
+    
+    
+    img1 = cv2.dilate(img1, (3,3),1)
+    img1 = cv2.erode(img1, (3,3),1)
+    img1 = cv2.dilate(img1, (3,3),10)
+
     
     #img1=cv.blur(img1,(3,3))
     #img1 = cv2.erode(img1, (5,5),10)
@@ -77,22 +79,33 @@ for filename in os.listdir("Slike"):
 
     dobrekonture=[]
     mogucetablice=[(0,0)]
+
+    cv.drawContours(prikaz, contours, -1, (0,0,255), 1)
+
+    for r in textboxes:
+        cv.rectangle(prikaz, (r.xmin,r.ymin), (r.xmax,r.ymax), (255,255,0), 2)
     
     for contour in contours:
-
         (x,y,w,h) = cv2.boundingRect(contour)
-        tester=orig[y:y+h,x:x+w]
-        tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
-        (meanbright1,__,__,__)=cv.mean(tester)
-        
-        
+        overlay = prikaz.copy()
 
-        if 3<=(w/h)<=6 and 100<=w<=300:
-            cv.drawContours(prikaz, contour, -1, (0,0,255), 3)
-            cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
-            if meanbright1>=meanbright/3:
-                cv2.rectangle(prikaz, (x,y), (x+w,y+h), (255,0,0), 2)
-                dobrekonture.append(contour)
+        cv2.rectangle(overlay, (x, y), (x+w, y+h), (0, 255, 0), 1)
+        alpha = 0.4 
+        prikaz = cv2.addWeighted(overlay, alpha, prikaz, 1 - alpha, 0)
+
+        #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
+        if 100<=w<=400 and 30<=h<=100 and 2.5<(w/h)<6:
+            tester=orig[y:y+h,x:x+w]
+            tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
+            (meanbright1,__,__,__)=cv.mean(tester)
+            #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
+
+            if 0<=(w/h)<=100:
+                if meanbright1>=meanbright/3:
+                    cv2.rectangle(prikaz, (x,y), (x+w,y+h), (255,0,0), 2)
+                    dobrekonture.append(contour)
+                else:
+                    cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,255), 2)
                 
     
     
@@ -110,10 +123,6 @@ for filename in os.listdir("Slike"):
             bound=Rectangle(x,y,x+w,y+h)
             boundarea=w*h
             histr = cv2.calcHist([tester],[0],None,[256],[0,256])
-            #plt.figure()
-            #plt.plot(histr,color = 'b')
-            #plt.xlim([0,256])
-            #plt.legend(str(index))
             beli=sum(histr[128:255])
             crni=sum(histr[0:127])
 
@@ -123,12 +132,12 @@ for filename in os.listdir("Slike"):
                 odnos=0
 
             for r in textboxes:
-                A=A+area(r,bound)
+                A=A+area(r,bound)/boundarea*100+area(r,bound)/((r.xmax-r.xmin)*(r.ymax-r.ymin))*200
             
             if odnos>5:
                 odnos=0
-            
-            score=A/boundarea*100+odnos*10+w/100
+            odstup=abs(4-(w/h))
+            score=A*100+odnos*20+min((w-40)/5+(h-10)/5,50)+min(w*h/50,50)+min(50/odstup,50)
             cv2.putText(prikaz,str(odnos),(x+30,y), font, 0.8,(0,0,0),2,cv2.LINE_AA,)
             #if(odnos>=0.1):
             mogucetablice.append((score,contour))
@@ -147,7 +156,6 @@ for filename in os.listdir("Slike"):
         if(score!=0):
             (x,y,w,h) = cv2.boundingRect(contour)
             tester=orig[y:y+h,x:x+w]
-            #
             if(score>maxscore):
                 maxscore,tablica=score,contour
           
@@ -165,11 +173,11 @@ for filename in os.listdir("Slike"):
     except:
         cv2.putText(orig,"OVO JE LOS PROGRAM!!!!",(10,300), font, 2,(255,0,0),10,cv2.LINE_AA)
 
-    final=orig.copy()
-    final=cv.cvtColor(final,cv.COLOR_BGR2RGB)
+
     text=pytesseract.image_to_string(orig)
     print(text)
     text_file.write(text+"\n") 
+    #orig=cv.cvtColor(orig,cv.COLOR_BGR2RGB)
     origslika=Image.fromarray(orig)
     origslika.save("C:\\Users\\T420\\Documents\\GitHub\\Tablice\\Rezultati\\"+str(broj)+"_tablica.jpg")
     #plt.figure()
