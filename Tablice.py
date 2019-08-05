@@ -238,6 +238,10 @@ for i in metrike:
         suma+=i
         brojac+=1
 m1=suma/brojac
+
+plt.hist(metrike,bins='auto')
+plt.savefig('histogram.jpg')
+
 print("Ukupno: "+str(metrika)+" %")
 text_file.write("Ukupno: "+str(metrika)+" % ("+str(len(metrike))+")\n")
 text_file.write("Vece od 50%: "+str(m1)+" % ("+str(brojac)+")\n")
