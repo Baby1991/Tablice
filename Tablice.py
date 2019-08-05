@@ -194,16 +194,17 @@ def tablica(img,name):
     
     return((x1,y1,x1+w1,y1+h1),granica,text)
 
-text_file = open("zuti_pravougaonici_Brazil.txt", "w")
+text_file = open("zuti_pravougaonici.txt", "w")
 metrike=[]
+link="../benchmarks/endtoend/eu/"
 
 def endtoend():
-    for filename in os.listdir("../benchmarks/endtoend/eu"):
+    for filename in os.listdir(link):
         if filename.endswith(".txt"):
-            f = open("../benchmarks/endtoend/eu/{0}".format(filename), "r")
+            f = open(link+"{0}".format(filename), "r")
             txt=f.read().split('\t')
             fajl=txt[0]
-            img=cv2.imread("../benchmarks/endtoend/eu/{0}".format(fajl))
+            img=cv2.imread(link+"{0}".format(fajl))
             name=fajl.split('.')[0]
             sx=int(txt[1])
             sy=int(txt[2])
@@ -222,15 +223,12 @@ def endtoend():
             text_file.write(name+" "+str(iou)+" % ("+str(granica)+") ["+text+"]\n")
             metrike.append(iou)
 
-def grci():
+"""def grci():
     for filename in os.listdir('Slike'):
         img = cv2.imread(filename)
-
+"""
 endtoend()
 
-#a=Rectangle(10,10,30,30)
-#b=Rectangle(50, 50, 100, 100)
-#print(area(a,b))
 text_file.write("\n")
 metrika=sum(metrike)/len(metrike)
 brojac=0
@@ -243,6 +241,5 @@ m1=suma/brojac
 print("Ukupno: "+str(metrika)+" %")
 text_file.write("Ukupno: "+str(metrika)+" % ("+str(len(metrike))+")\n")
 text_file.write("Vece od 50%: "+str(m1)+" % ("+str(brojac)+")\n")
-#text_file.write("DNN Granica: "+str(granica)+"\n")
 text_file.close()
 
