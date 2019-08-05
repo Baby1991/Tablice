@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import pytesseract
 import numpy as np
 import text_detection
+import os
 from collections import namedtuple
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
@@ -31,7 +32,7 @@ def tablica(imgin):
     
     for (sx,sy,ex,ey) in textboxes:
         
-        #cv2.rectangle(prikaz,(sx,sy),(ex,ey),(0,0,0),3)
+        cv2.rectangle(prikaz,(sx,sy),(ex,ey),(0,0,0),3)
         test=img[sy:ey,sx:ex]
         text=pytesseract.image_to_string(test)
         if(text is not ""):
@@ -41,15 +42,14 @@ def tablica(imgin):
 
     height,width = img.shape[:2]
     blank_image = np.zeros((height,width,3), np.uint8)
-
-    cv2.drawContours(blank_image,contours,-1,(255,255,255),1)
     blank_image=cv2.cvtColor(blank_image,cv2.COLOR_BGR2GRAY)
-    ret, labels = cv2.connectedComponents(blank_image)
-
-
-    imshow_components(labels)
+    cv2.drawContours(blank_image,contours,-1,(255,255,255),1)
+    blank_image=cv2.cvtColor(blank_image,cv2.COLOR_GRAY2RGB)
+    
 
     for cnt in contours:
+        A=0
+        skor=0
         x,y,w,h = cv2.boundingRect(cnt)
         rect = cv2.minAreaRect(cnt)
         box = cv2.boxPoints(rect)
@@ -57,10 +57,11 @@ def tablica(imgin):
         cv2.drawContours(img,[box],0,(255,0,0),2)
         #if 2<=(w/h)<=7:
         cv2.rectangle(prikaz,(x,y),(x+w,y+h),(0,255,0),3)
-   
-    
-    plt.figure()
-    plt.imshow(overlap)
+
+        
+
+    #plt.figure()
+    #plt.imshow(overlap)
     
     plt.figure()
     plt.imshow(prikaz) 
@@ -68,10 +69,19 @@ def tablica(imgin):
     plt.figure()
     plt.imshow(blank_image) 
 
+    plt.figure()
+    plt.imshow(gaussCannygray) 
+
+    plt.figure()
+    plt.imshow(treshgaussgray)
+    
     plt.show()
 
-img=cv2.imread("test_030.jpg")
-tablica(img)
 
 
 
+
+for filename in os.listdir("Slike"):
+    if filename.endswith(".jpg"):
+        img=cv2.imread("Slike/"+filename)
+        tablica(img)

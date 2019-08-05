@@ -66,9 +66,10 @@ def text_detection(img, minc):
 	output=[]
 
 	for (startX, startY, endX, endY) in boxes:
-		startX = int(startX * rW)
-		startY = int(startY * rH)-3
-		endX = int(endX * rW)
-		endY = int(endY * rH)+8
+		startX = int(startX * rW)-5
+		startY = int(startY * rH)-2
+		endX = int(endX * rW)+5
+		endY = int(endY * rH)+7
 		output.append((startX,startY,endX,endY))
 	return output
+
