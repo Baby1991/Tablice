@@ -26,9 +26,9 @@ def area(a, b):
     x12 = cetiritacke[1][0]
     y12 = cetiritacke[1][1]
 
-    if (x21 > x11 and x21 > x12) or (x21 < x11 and x21 < x12) and ((x22 > x11 and x22 > x12) or (x22 < x11 and x22 < x12)):
+    if ((x21 > x11 and x21 > x12) and (x22 > x11 and x22 > x12)) or ((x21 < x11 and x21 < x12) and (x22 < x11 and x22 < x12)):
         return 0
-    if (y21 > y11 and y21 > y12) or (y21 < y11 and y21 < y12) and ((y22 > y11 and y22 > y12) or (y22 < y11 and y22 < y12)):
+    if ((y21 > y11 and y21 > y12) and (y22 > y11 and y22 > y12)) or ((y21 < y11 and y21 < y12) and (y22 < y11 and y22 < y12)):
         return 0
 
     arry = [y11, y12, y21, y22]
@@ -53,9 +53,11 @@ def tablica(img,name):
 
     img=orig.copy()
     prikaz=orig.copy()
-
     textboxes=[]
-    textboxes=text_detection.text_detection(img,0.8)
+    granica=1
+    while len(textboxes)<1:
+        textboxes=text_detection.text_detection(img,granica)
+        granica-=0.05
         
     img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     img = cv.normalize(img, img, 0, 255, cv.NORM_MINMAX)
@@ -132,27 +134,28 @@ def tablica(img,name):
         for (sx,sy,ex,ey) in textboxes:
             r=Rectangle(sx,sy,ex,ey)
             #print("Area:", r, bound, area(r,bound))
-            A=A+area(r,bound)/boundarea*100  +area(r,bound)/((r.xmax-r.xmin)*(r.ymax-r.ymin))*200
+            A=A+area(r,bound)/boundarea*100  +area(r,bound)/((ex-sx)*(ey-sy))*50
             #print(area(r,bound)/boundarea)
-            # 
             
         if odnos>5:
             odnos=0
         odstup=abs(4-(w/h))
         #print(A)    
-        score=odnos*10
+        score=A
+        
+        #odnos*10
         #50*A+
         #+w*h/30000+odstup/50
             
         #+min((w-40)/5+(h-10)/5,50)+min(w*h/50,50)+min(50/odstup,50)
-        #cv2.putText(prikaz,str(odnos),(x+30,y), font, 0.8,(0,0,0),2,cv2.LINE_AA,)
+        cv2.putText(prikaz,str(score),(x,y), font, 0.5,(0,0,0),2,cv2.LINE_AA,)
         #if(odnos>=0.1):
         mogucetablice.append((score,contour))
                 
         
         
-    #prikazslika=Image.fromarray(prikaz)
-    #prikazslika.save("C:\\Users\\T420\\Documents\\GitHub\\Tablice\\Rezultati\\"+str(broj)+"_detekcija.jpg")
+    prikazslika=Image.fromarray(prikaz)
+    prikazslika.save("../Rezultati/{0}_detekcija.jpg".format(name))
     if len(mogucetablice)>0:
         maxscore,tablica=mogucetablice[0]
         for (score,contour) in mogucetablice:
@@ -187,41 +190,43 @@ def tablica(img,name):
     #text_file.write(text+"\n") 
     orig=cv.cvtColor(orig,cv.COLOR_BGR2RGB)
     origslika=Image.fromarray(orig)
-    origslika.save("C:\\Users\\T420\\Documents\\GitHub\\Rezultati\\"+name+"_tablica.jpg")
+    origslika.save("../Rezultati/{0}_tablica.jpg".format(name))
     
-    return((x1,y1,x1+w1,y1+h1))
+    return((x1,y1,x1+w1,y1+h1),granica,text)
 
-text_file = open("Odnos_boja_i_velicina.txt", "w")
+text_file = open("zuti_pravougaonici_Brazil.txt", "w")
 metrike=[]
 
-for filename in os.listdir("C:\\Users\\T420\\Documents\\GitHub\\benchmarks\\endtoend\\eu"):
-    if filename.endswith(".txt"):
-        f = open("C:\\Users\\T420\\Documents\\GitHub\\benchmarks\\endtoend\\eu\\"+filename, "r")
-        txt=f.read().split('\t')
-        fajl=txt[0]
-        img=cv2.imread("C:\\Users\\T420\\Documents\\GitHub\\benchmarks\\endtoend\\eu\\"+fajl)
-        name=fajl.split('.')[0]
-        #(sx,sy,ex,ey)=txt[1:5]
-        sx=int(txt[1])
-        sy=int(txt[2])
-        w=int(txt[3])
-        h=int(txt[4])
-        ex=sx+w
-        ey=sy+h
-        (sx1,sy1,ex1,ey1)=tablica(img,name)
-        
-        #print(sx,",",sx1,":",ex,",",ex1,":",sy,",",sy1,":",ey,",",ey1)
-        detektovano=Rectangle(sx1,sy1,ex1,ey1)
-        baza=Rectangle(sx,sy,ex,ey)
-        presek=area(baza,detektovano)
-        unija=(ex1-sx1)*(ey1-sy1)+(ex-sx)*(ey-sy)-presek
-        iou=presek/unija*100
-        #print(name,iou,"%")
-        print("...")
-        text_file.write(name+" "+str(iou)+" %\n")
-        metrike.append(iou)
+def endtoend():
+    for filename in os.listdir("../benchmarks/endtoend/eu"):
+        if filename.endswith(".txt"):
+            f = open("../benchmarks/endtoend/eu/{0}".format(filename), "r")
+            txt=f.read().split('\t')
+            fajl=txt[0]
+            img=cv2.imread("../benchmarks/endtoend/eu/{0}".format(fajl))
+            name=fajl.split('.')[0]
+            sx=int(txt[1])
+            sy=int(txt[2])
+            w=int(txt[3])
+            h=int(txt[4])
+            ex=sx+w
+            ey=sy+h
+            (sx1,sy1,ex1,ey1),granica,text=tablica(img,name)
+            
+            detektovano=Rectangle(sx1,sy1,ex1,ey1)
+            baza=Rectangle(sx,sy,ex,ey)
+            presek=area(baza,detektovano)
+            unija=(ex1-sx1)*(ey1-sy1)+(ex-sx)*(ey-sy)-presek
+            iou=presek/unija*100
+            print(name)
+            text_file.write(name+" "+str(iou)+" % ("+str(granica)+") ["+text+"]\n")
+            metrike.append(iou)
 
-        #print(presek,unija,iou)
+def grci():
+    for filename in os.listdir('Slike'):
+        img = cv2.imread(filename)
+
+endtoend()
 
 #a=Rectangle(10,10,30,30)
 #b=Rectangle(50, 50, 100, 100)
@@ -230,15 +235,14 @@ text_file.write("\n")
 metrika=sum(metrike)/len(metrike)
 brojac=0
 suma=0
-for i in metrika:
+for i in metrike:
     if i>50:
         suma+=i
         brojac+=1
 m1=suma/brojac
+print("Ukupno: "+str(metrika)+" %")
 text_file.write("Ukupno: "+str(metrika)+" % ("+str(len(metrike))+")\n")
-text_file.write("Vece od nule: "+str(m1)+" % ("+str(brojac)+")\n")
+text_file.write("Vece od 50%: "+str(m1)+" % ("+str(brojac)+")\n")
+#text_file.write("DNN Granica: "+str(granica)+"\n")
 text_file.close()
-duckajga()
 
-        
-  
