@@ -52,6 +52,20 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
         print('\n')    
     
 
+def merge (textbox1, textbox2):
+    textbox3 = []
+    if textbox1[0] < textbox2[0]:
+        textbox3.append(textbox1[0])
+        textbox3.append(textbox1[1])
+        textbox3.append(textbox2[2])
+        textbox3.append(textbox2[3])
+        return tuple(textbox3)
+    
+    textbox3.append(textbox2[0])
+    textbox3.append(textbox2[1])
+    textbox3.append(textbox1[2])
+    textbox3.append(textbox1[3])
+    return tuple(textbox3)
 
 
     
@@ -66,7 +80,21 @@ def tablica(img,name):
     granica=1
     while len(textboxes)<1:
         textboxes=text_detection.text_detection(img,granica)
+        '''for txt in textboxes:
+            if abs(txt[0] - txt[2]) > 500 or abs(txt[1] - txt[3]) > 300 or abs(txt[0] - txt[2]) / abs(txt[1] - txt[3]) < 1.5:
+                textboxes.remove(txt)'''
         granica-=0.05
+    if len(textboxes) > 1:
+        i = 0
+        while i < len(textboxes):
+            j = i + 1
+            while j < len(textboxes):
+                if (abs(textboxes[i][2] - textboxes[j][0]) < 20 or abs(textboxes[i][0] - textboxes[j][2]) < 20) or (abs(textboxes[i][3] - textboxes[j][1]) < 10 or abs(textboxes[i][1] - textboxes[j][3]) < 10):
+                    textboxes.insert(i + 1, merge(textboxes[i], textboxes[j]))
+                    textboxes.pop(i + 1)
+                    textboxes.pop(j)
+                j+=1
+            i+=1
 
     img = cv.normalize(img, img, 0, 255, cv.NORM_MINMAX)
     """
@@ -156,8 +184,8 @@ def tablica(img,name):
         for (sx,sy,ex,ey) in textboxes:
             r=Rectangle(sx,sy,ex,ey)
             #print("Area:", r, bound, area(r,bound))
-            if area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 80 > A:
-                A=area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 80
+            if area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 70 > A:
+                A = area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 70
             #print(area(r,bound)/boundarea)
             
         if odnos>3:
