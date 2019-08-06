@@ -143,7 +143,8 @@ def tablica(img,name):
         for (sx,sy,ex,ey) in textboxes:
             r=Rectangle(sx,sy,ex,ey)
             #print("Area:", r, bound, area(r,bound))
-            A=A+area(r,bound)/boundarea*100  +area(r,bound)/((ex-sx)*(ey-sy))*50
+            if area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 80 > A:
+                A=area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 80
             #print(area(r,bound)/boundarea)
             
         if odnos>3:
