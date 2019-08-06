@@ -38,12 +38,6 @@ def area(a, b):
     return (arrx[2] - arrx[1]) * (arry[2] - arry[1])
 
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-    iteration   - Required  : current iteration (Int)
-    total       - Required  : total iterations (Int)
-    """
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
@@ -96,7 +90,21 @@ def tablica(img,name):
                 j+=1
             i+=1
 
-    img = cv.normalize(img, img, 0, 255, cv.NORM_MINMAX)
+    #img = cv.normalize(img, img, 0, 255, cv.NORM_MINMAX)
+    
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    hue, saturation, value = cv2.split(hsv)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    topHat = cv2.morphologyEx(value, cv2.MORPH_TOPHAT, kernel)
+    blackHat = cv2.morphologyEx(value, cv2.MORPH_BLACKHAT, kernel)
+    add = cv2.add(value, topHat)
+    subtract = cv2.subtract(add, blackHat)
+    blur = cv2.GaussianBlur(subtract, (5, 5), 0)
+
+    thresh = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9)
+    
+    CannyThresh=cv2.Canny(thresh,0,200,10)
+
     """
     gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     gauss=cv2.GaussianBlur(img,(5,5),0)
@@ -106,9 +114,7 @@ def tablica(img,name):
     overlap=cv2.bitwise_and(gaussCanny,gaussCannygray)
     """
 
-
-
-    
+    """
     img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     
     meanbright,_,_,_=cv.mean(img)
@@ -121,10 +127,18 @@ def tablica(img,name):
     img1 = cv2.dilate(img1, (3,3),1)
     img1 = cv2.erode(img1, (3,3),1)
     img1 = cv2.dilate(img1, (3,3),10)
-    
-    (contours,__)=cv.findContours( img1, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
+    """
+    (contours,__)=cv.findContours( CannyThresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
     (x1,y1,w1,h1)=(0,0,0,0)
-        
+
+    height,width = img.shape[:2]
+    blank_image = np.zeros((height,width,3), np.uint8)
+    blank_image=cv2.cvtColor(blank_image,cv2.COLOR_BGR2GRAY)
+    cv2.drawContours(blank_image,contours,-1,(255,255,255),1)
+    blank_image=cv2.cvtColor(blank_image,cv2.COLOR_GRAY2RGB)
+    blanksave=Image.fromarray(blank_image)
+    blanksave.save("../Rezultati/{0}_ivice.jpg".format(name))
+
     dobrekonture=[]
     mogucetablice=[]
 
@@ -142,7 +156,7 @@ def tablica(img,name):
         prikaz = cv2.addWeighted(overlay, alpha, prikaz, 1 - alpha, 0)
 
         #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
-        if 0<=(w/h)<=100 and 600>w>50 and 300>h>20:
+        if 0<=(w/h)<=100 and 1000>w>0 and 1000>h>0:
             tester=orig[y:y+h,x:x+w]
             tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
             (meanbright1,__,__,__)=cv.mean(tester)
@@ -175,12 +189,12 @@ def tablica(img,name):
         beli=sum(histr[128:255])
         crni=sum(histr[0:127])
         #odnos=beli/crni
-        
+        """
         if crni>0:
             odnos=beli/crni
         else:
             odnos=0
-        
+        """
         for (sx,sy,ex,ey) in textboxes:
             r=Rectangle(sx,sy,ex,ey)
             #print("Area:", r, bound, area(r,bound))
@@ -188,9 +202,9 @@ def tablica(img,name):
                 A = area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 70
             #print(area(r,bound)/boundarea)
             
-        if odnos>3:
-            odnos=0
-        odstup=abs(4-(w/h))
+        #if odnos>3:
+        #    odnos=0
+        #odstup=abs(4-(w/h))
         #print(A)    
         score=A 
         #+ odnos*10
