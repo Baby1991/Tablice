@@ -156,7 +156,7 @@ def tablica(img,name):
         prikaz = cv2.addWeighted(overlay, alpha, prikaz, 1 - alpha, 0)
 
         #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
-        if 0<=(w/h)<=100 and 1000>w>0 and 1000>h>0:
+        if 2<=(w/h)<=1000 and 1000>w>50 and 1000>h>0:
             tester=orig[y:y+h,x:x+w]
             tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
             (meanbright1,__,__,__)=cv.mean(tester)
@@ -265,10 +265,10 @@ link="../benchmarks/endtoend/eu/"
 def endtoend():
     brojac=0
     ukupno=len(os.listdir(link))/2
+    printProgressBar (0, 100, suffix="\t0%")
     for filename in os.listdir(link):
         if filename.endswith(".txt"):
 
-            printProgressBar (brojac, ukupno-1)
             f = open(link+"{0}".format(filename), "r")
             txt=f.read().split('\t')
             fajl=txt[0]
@@ -290,6 +290,9 @@ def endtoend():
             #print(name)
             text_file.write(name+" "+str(iou)+" % ("+str(granica)+") ["+text+"]\n")
             metrike.append(iou)
+
+            currmetrika=sum(metrike)/len(metrike)
+            printProgressBar (brojac, ukupno-1, suffix=("\t"+str(currmetrika)+" %"))
             brojac+=1
 
 
@@ -321,6 +324,5 @@ plt.savefig('histogram_zuti_odnos.jpg')
 print("\r Ukupno: "+str(metrika)+" % \r")
 text_file.write("Ukupno: "+str(metrika)+" % ("+str(len(metrike))+")\n")
 text_file.write("Vece od 50%: "+str(m1)+" % ("+str(brojac)+")\n")
-text_file.write("Prosecno vreme po slici: "+str(prosecnovreme)+" s ("+str(vreme)+")\n")
+text_file.write("Prosecno vreme po slici: "+str(prosecnovreme)+" s ("+str(vreme/60)+" min)\n")
 text_file.close()
-
