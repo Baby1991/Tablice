@@ -67,9 +67,22 @@ def tablica(img,name):
     while len(textboxes)<1:
         textboxes=text_detection.text_detection(img,granica)
         granica-=0.05
-        
-    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
     img = cv.normalize(img, img, 0, 255, cv.NORM_MINMAX)
+    """
+    gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    gauss=cv2.GaussianBlur(img,(5,5),0)
+    gaussgray=cv2.GaussianBlur(gray,(5,5),0)
+    gaussCanny=cv2.Canny(gauss,100,200,10)
+    gaussCannygray=cv2.Canny(gaussgray,0,200,10)
+    overlap=cv2.bitwise_and(gaussCanny,gaussCannygray)
+    """
+
+
+
+    
+    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    
     meanbright,_,_,_=cv.mean(img)
 
     img=cv.blur(img,(5,5))
@@ -80,7 +93,7 @@ def tablica(img,name):
     img1 = cv2.dilate(img1, (3,3),1)
     img1 = cv2.erode(img1, (3,3),1)
     img1 = cv2.dilate(img1, (3,3),10)
-
+    
     (contours,__)=cv.findContours( img1, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
     (x1,y1,w1,h1)=(0,0,0,0)
         
@@ -97,11 +110,11 @@ def tablica(img,name):
         overlay = prikaz.copy()
 
         cv2.rectangle(overlay, (x, y), (x+w, y+h), (0, 255, 0), 1)
-        alpha = 0.4 
+        alpha = 0.7 
         prikaz = cv2.addWeighted(overlay, alpha, prikaz, 1 - alpha, 0)
 
         #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
-        if 2<=(w/h)<=6 and w>50:
+        if 0<=(w/h)<=100 and 600>w>50 and 300>h>20:
             tester=orig[y:y+h,x:x+w]
             tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
             (meanbright1,__,__,__)=cv.mean(tester)
@@ -212,7 +225,7 @@ def endtoend():
     for filename in os.listdir(link):
         if filename.endswith(".txt"):
 
-            printProgressBar (brojac, ukupno)
+            printProgressBar (brojac, ukupno-1)
             f = open(link+"{0}".format(filename), "r")
             txt=f.read().split('\t')
             fajl=txt[0]
