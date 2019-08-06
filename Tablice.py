@@ -291,7 +291,7 @@ def endtoend():
             text_file.write(name+" "+str(iou)+" % ("+str(granica)+") ["+text+"]\n")
             metrike.append(iou)
 
-            currmetrika=sum(metrike)/len(metrike)
+            currmetrika=round(sum(metrike)/len(metrike),2)
             printProgressBar (brojac, ukupno-1, suffix=("\t"+str(currmetrika)+" %"))
             brojac+=1
 
