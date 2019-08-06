@@ -43,7 +43,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     bar = fill * filledLength + '-' * (length - filledLength)
     print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
     if iteration == total: 
-        print('\n')    
+        print('\n')     
     
 
 def merge (textbox1, textbox2):
@@ -290,7 +290,7 @@ def endtoend():
             unija=(ex1-sx1)*(ey1-sy1)+(ex-sx)*(ey-sy)-presek
             iou=presek/unija*100
             #print(name)
-            text_file.write(name+" "+str(iou)+" % ("+str(granica)+") ["+text+"] {"+str(odnos)+"}s\n")
+            text_file.write(name+" "+str(iou)+" % ("+str(granica)+") ["+text+"] {"+str(odnos)+"}\n")
             metrike.append(iou)
             odnosi.append(odnos)
             currmetrika=round(sum(metrike)/len(metrike),1)
@@ -302,7 +302,7 @@ def endtoend():
                 preostalovreme= str(round(preostalovreme/60,1))+" min"
             else:
                 preostalovreme= str(round(preostalovreme,1))+" s"
-            printProgressBar (brojac, ukupno-1, suffix=("\t"+str(currmetrika)+"%\t"+preostalovreme))
+            printProgressBar (brojac, ukupno, suffix=("\t"+str(currmetrika)+"%\t"+preostalovreme+"\t\t"))
                
             
 
@@ -335,7 +335,7 @@ odnos=odno/brojac
 plt.hist(metrike,bins='auto')
 plt.savefig('histogram_zuti_odnos.jpg')
 
-print("\r Ukupno: "+str(metrika)+" % \n\r")
+print("\r Ukupno: "+str(metrika)+" % \r")
 text_file.write("Ukupno: "+str(metrika)+" % ("+str(len(metrike))+")\n")
 text_file.write("Vece od 50%: "+str(m1)+" % ("+str(brojac)+")\n")
 text_file.write("Prosecno vreme po slici: "+str(prosecnovreme)+" s ("+str(vreme/60)+" min)\n")
