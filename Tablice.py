@@ -37,7 +37,7 @@ def area(a, b):
     arrx.sort()
     return (arrx[2] - arrx[1]) * (arry[2] - arry[1])
 
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█',final=""):
+def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
     """
     Call in a loop to create terminal progress bar
     @params:
@@ -49,7 +49,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     bar = fill * filledLength + '-' * (length - filledLength)
     print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
     if iteration == total: 
-        print(final)    
+        print('\n')    
     
 
 
@@ -211,9 +211,8 @@ def endtoend():
     ukupno=len(os.listdir(link))/2
     for filename in os.listdir(link):
         if filename.endswith(".txt"):
-
-            printProgressBar (brojac, ukupno,final="\n \n Done \n \n")
-
+            
+            printProgressBar (brojac, ukupno)
             f = open(link+"{0}".format(filename), "r")
             txt=f.read().split('\t')
             fajl=txt[0]
@@ -266,6 +265,6 @@ plt.savefig('histogram_zuti_odnos.jpg')
 print("Ukupno: "+str(metrika)+" %")
 text_file.write("Ukupno: "+str(metrika)+" % ("+str(len(metrike))+")\n")
 text_file.write("Vece od 50%: "+str(m1)+" % ("+str(brojac)+")\n")
-text_file.write("Prosecno vreme po slici: "+str(prosecnovreme)+" sss\n")
+text_file.write("Prosecno vreme po slici: "+str(prosecnovreme)+" s ("+str(vreme)+")\n")
 text_file.close()
 
