@@ -5,7 +5,7 @@ import pytesseract
 import numpy as np
 import text_detection
 from PIL import Image
-
+import time
 
 import os
 
@@ -37,10 +37,19 @@ def area(a, b):
     arrx.sort()
     return (arrx[2] - arrx[1]) * (arry[2] - arry[1])
 
-    
-def duckajga():
-    print("Duckaj ga Dimitrije")
-    duckajga()
+def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█',final=""):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+    iteration   - Required  : current iteration (Int)
+    total       - Required  : total iterations (Int)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
+    if iteration == total: 
+        print(final)    
     
 
 
@@ -92,7 +101,7 @@ def tablica(img,name):
         prikaz = cv2.addWeighted(overlay, alpha, prikaz, 1 - alpha, 0)
 
         #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
-        if 2.5<=(w/h)<=6 and w>50:
+        if 3<=(w/h)<=5 and w>50:
             tester=orig[y:y+h,x:x+w]
             tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
             (meanbright1,__,__,__)=cv.mean(tester)
@@ -124,26 +133,25 @@ def tablica(img,name):
         histr = cv2.calcHist([tester],[0],None,[256],[0,256])
         beli=sum(histr[128:255])
         crni=sum(histr[0:127])
-        odnos=beli/crni
-        """
+        #odnos=beli/crni
+        
         if crni>0:
             odnos=beli/crni
         else:
             odnos=0
-        """
+        
         for (sx,sy,ex,ey) in textboxes:
             r=Rectangle(sx,sy,ex,ey)
             #print("Area:", r, bound, area(r,bound))
             A=A+area(r,bound)/boundarea*100  +area(r,bound)/((ex-sx)*(ey-sy))*50
             #print(area(r,bound)/boundarea)
             
-        if odnos>5:
+        if odnos>3:
             odnos=0
         odstup=abs(4-(w/h))
         #print(A)    
-        score=A
-        
-        #odnos*10
+        score=A 
+        #+ odnos*10
         #50*A+
         #+w*h/30000+odstup/50
             
@@ -194,13 +202,18 @@ def tablica(img,name):
     
     return((x1,y1,x1+w1,y1+h1),granica,text)
 
-text_file = open("zuti_pravougaonici.txt", "w")
+text_file = open("zuti_pravougaonici_Odnos.txt", "w")
 metrike=[]
 link="../benchmarks/endtoend/eu/"
 
 def endtoend():
+    brojac=0
+    ukupno=len(os.listdir(link))/2
     for filename in os.listdir(link):
         if filename.endswith(".txt"):
+
+            printProgressBar (brojac, ukupno,final="\n \n Done \n \n")
+
             f = open(link+"{0}".format(filename), "r")
             txt=f.read().split('\t')
             fajl=txt[0]
@@ -219,20 +232,28 @@ def endtoend():
             presek=area(baza,detektovano)
             unija=(ex1-sx1)*(ey1-sy1)+(ex-sx)*(ey-sy)-presek
             iou=presek/unija*100
-            print(name)
+            #print(name)
             text_file.write(name+" "+str(iou)+" % ("+str(granica)+") ["+text+"]\n")
             metrike.append(iou)
+            brojac+=1
+
 
 """def grci():
     for filename in os.listdir('Slike'):
         img = cv2.imread(filename)
 """
+
+
+
+start=time.time()
 endtoend()
+vreme=time.time()-start   
 
 text_file.write("\n")
 metrika=sum(metrike)/len(metrike)
 brojac=0
 suma=0
+prosecnovreme=vreme/len(metrike)
 for i in metrike:
     if i>50:
         suma+=i
@@ -240,10 +261,11 @@ for i in metrike:
 m1=suma/brojac
 
 plt.hist(metrike,bins='auto')
-plt.savefig('histogram.jpg')
+plt.savefig('histogram_zuti_odnos.jpg')
 
 print("Ukupno: "+str(metrika)+" %")
 text_file.write("Ukupno: "+str(metrika)+" % ("+str(len(metrike))+")\n")
 text_file.write("Vece od 50%: "+str(m1)+" % ("+str(brojac)+")\n")
+text_file.write("Prosecno vreme po slici: "+str(prosecnovreme)+" sss\n")
 text_file.close()
 
