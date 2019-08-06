@@ -101,7 +101,7 @@ def tablica(img,name):
         prikaz = cv2.addWeighted(overlay, alpha, prikaz, 1 - alpha, 0)
 
         #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
-        if 3<=(w/h)<=5 and w>50:
+        if 2<=(w/h)<=6 and w>50:
             tester=orig[y:y+h,x:x+w]
             tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
             (meanbright1,__,__,__)=cv.mean(tester)
@@ -211,7 +211,7 @@ def endtoend():
     ukupno=len(os.listdir(link))/2
     for filename in os.listdir(link):
         if filename.endswith(".txt"):
-            
+
             printProgressBar (brojac, ukupno)
             f = open(link+"{0}".format(filename), "r")
             txt=f.read().split('\t')
