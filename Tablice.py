@@ -258,14 +258,14 @@ def tablica(img,name):
     
     return((x1,y1,x1+w1,y1+h1),granica,text)
 
-text_file = open("zuti_pravougaonici_Odnos.txt", "w")
+text_file = open("americka baza.txt", "w")
 metrike=[]
-link="../benchmarks/endtoend/eu/"
+link="../benchmarks/endtoend/us/"
 
 def endtoend():
     brojac=0
     ukupno=len(os.listdir(link))/2
-    printProgressBar (0, 100, suffix="\t0%")
+    printProgressBar (0, 100, suffix="\t0 %")
     for filename in os.listdir(link):
         if filename.endswith(".txt"):
 
