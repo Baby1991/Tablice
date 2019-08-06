@@ -262,7 +262,7 @@ m1=suma/brojac
 plt.hist(metrike,bins='auto')
 plt.savefig('histogram_zuti_odnos.jpg')
 
-print("Ukupno: "+str(metrika)+" %")
+print("\r Ukupno: "+str(metrika)+" % \r")
 text_file.write("Ukupno: "+str(metrika)+" % ("+str(len(metrike))+")\n")
 text_file.write("Vece od 50%: "+str(m1)+" % ("+str(brojac)+")\n")
 text_file.write("Prosecno vreme po slici: "+str(prosecnovreme)+" s ("+str(vreme)+")\n")
