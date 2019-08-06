@@ -157,18 +157,16 @@ def tablica(img,name):
 
         #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
         if 2<=(w/h)<=1000 and 1000>w>50 and 1000>h>0:
-            tester=orig[y:y+h,x:x+w]
-            tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
-            (meanbright1,__,__,__)=cv.mean(tester)
+            #tester=orig[y:y+h,x:x+w]
+            #tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
+            #(meanbright1,__,__,__)=cv.mean(tester)
             #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
 
 
             if 0<=(w/h)<=1000:
-                if meanbright1>=0:
-                    cv2.rectangle(prikaz, (x,y), (x+w,y+h), (255,0,0), 2)
-                    dobrekonture.append(contour)
-                else:
-                    cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,255), 2)
+                
+                cv2.rectangle(prikaz, (x,y), (x+w,y+h), (255,0,0), 2)
+                dobrekonture.append(contour)
                     
         
         
@@ -183,12 +181,15 @@ def tablica(img,name):
         #index=dobrekonture.index(contour)
         #cv2.putText(prikaz,str(index),(x,y), font, 1,(0,0,0),2,cv2.LINE_AA)
         tester=imgbw[y:y+h,x:x+w]
+        tester = cv.normalize(tester, tester, 0, 255, cv.NORM_MINMAX)
+        #(meanbright,__,__,__)=cv.mean(tester)
         bound=Rectangle(x,y,x+w,y+h)
         boundarea=w*h
         histr = cv2.calcHist([tester],[0],None,[256],[0,256])
-        beli=sum(histr[128:255])
-        crni=sum(histr[0:127])
-        #odnos=beli/crni
+        beli=sum(histr[190:255])
+        crni=sum(histr[0:64])
+        
+        odnos=beli/crni
         """
         if crni>0:
             odnos=beli/crni
@@ -212,23 +213,23 @@ def tablica(img,name):
         #+w*h/30000+odstup/50
             
         #+min((w-40)/5+(h-10)/5,50)+min(w*h/50,50)+min(50/odstup,50)
-        cv2.putText(prikaz,str(score),(x,y), font, 0.5,(0,0,0),2,cv2.LINE_AA,)
+        cv2.putText(prikaz,str(round(score,0))+"\t"+str(odnos),(x,y), font, 0.4,(0,0,0),2,cv2.LINE_AA,)
         #if(odnos>=0.1):
-        mogucetablice.append((score,contour))
+        mogucetablice.append((score,contour,odnos))
                 
         
         
     prikazslika=Image.fromarray(prikaz)
     prikazslika.save("../Rezultati/{0}_detekcija.jpg".format(name))
     if len(mogucetablice)>0:
-        maxscore,tablica=mogucetablice[0]
-        for (score,contour) in mogucetablice:
+        maxscore,tablica,modnos=mogucetablice[0]
+        for (score,contour,odnos) in mogucetablice:
             #if(score!=0):
             if 1==1:
                 (x,y,w,h) = cv2.boundingRect(contour)
                 tester=orig[y:y+h,x:x+w]
                 if(score>maxscore):
-                    maxscore,tablica=score,contour
+                    maxscore,tablica,modnos=score,contour,odnos
             
         
     
@@ -256,19 +257,20 @@ def tablica(img,name):
     origslika=Image.fromarray(orig)
     origslika.save("../Rezultati/{0}_tablica.jpg".format(name))
     
-    return((x1,y1,x1+w1,y1+h1),granica,text)
+    return((x1,y1,x1+w1,y1+h1),granica,text,modnos)
 
 text_file = open("zuti_pravougaonici_Odnos.txt", "w")
 metrike=[]
+odnosi=[]
 link="../benchmarks/endtoend/eu/"
 
 def endtoend():
     brojac=0
     ukupno=len(os.listdir(link))/2
-    printProgressBar (0, 100, suffix="\t 0%")
+    printProgressBar (0, 100)
     for filename in os.listdir(link):
         if filename.endswith(".txt"):
-
+            
             f = open(link+"{0}".format(filename), "r")
             txt=f.read().split('\t')
             fajl=txt[0]
@@ -280,7 +282,7 @@ def endtoend():
             h=int(txt[4])
             ex=sx+w
             ey=sy+h
-            (sx1,sy1,ex1,ey1),granica,text=tablica(img,name)
+            (sx1,sy1,ex1,ey1),granica,text,odnos=tablica(img,name)
             
             detektovano=Rectangle(sx1,sy1,ex1,ey1)
             baza=Rectangle(sx,sy,ex,ey)
@@ -288,12 +290,20 @@ def endtoend():
             unija=(ex1-sx1)*(ey1-sy1)+(ex-sx)*(ey-sy)-presek
             iou=presek/unija*100
             #print(name)
-            text_file.write(name+" "+str(iou)+" % ("+str(granica)+") ["+text+"]\n")
+            text_file.write(name+" "+str(iou)+" % ("+str(granica)+") ["+text+"] {"+str(odnos)+"}s\n")
             metrike.append(iou)
-
-            currmetrika=round(sum(metrike)/len(metrike),2)
+            odnosi.append(odnos)
+            currmetrika=round(sum(metrike)/len(metrike),1)
             brojac+=1
-            printProgressBar (brojac, ukupno-1, suffix=("\t"+str(currmetrika)+" %"))
+            dosad=time.time()-start
+            prosecnovreme=dosad/brojac
+            preostalovreme=(ukupno-brojac)*prosecnovreme
+            if preostalovreme>=60:
+                preostalovreme= str(round(preostalovreme/60,1))+" min"
+            else:
+                preostalovreme= str(round(preostalovreme,1))+" s"
+            printProgressBar (brojac, ukupno-1, suffix=("\t"+str(currmetrika)+"%\t"+preostalovreme))
+               
             
 
 
@@ -312,18 +322,22 @@ text_file.write("\n")
 metrika=sum(metrike)/len(metrike)
 brojac=0
 suma=0
+odno=0
 prosecnovreme=vreme/len(metrike)
-for i in metrike:
-    if i>50:
-        suma+=i
+for i in range(0,len(metrike)-1):
+    if metrike[i]>50:
+        suma+=metrike[i]
         brojac+=1
+        odno+=odnosi[i]
 m1=suma/brojac
+odnos=odno/brojac
 
 plt.hist(metrike,bins='auto')
 plt.savefig('histogram_zuti_odnos.jpg')
 
-print("\r Ukupno: "+str(metrika)+" % \r")
+print("\r Ukupno: "+str(metrika)+" % \n\r")
 text_file.write("Ukupno: "+str(metrika)+" % ("+str(len(metrike))+")\n")
 text_file.write("Vece od 50%: "+str(m1)+" % ("+str(brojac)+")\n")
 text_file.write("Prosecno vreme po slici: "+str(prosecnovreme)+" s ("+str(vreme/60)+" min)\n")
+text_file.write("Odnos: "+str(odnos)+"\n")
 text_file.close()
