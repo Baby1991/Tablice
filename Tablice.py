@@ -258,14 +258,14 @@ def tablica(img,name):
     
     return((x1,y1,x1+w1,y1+h1),granica,text)
 
-text_file = open("americka baza.txt", "w")
+text_file = open("zuti_pravougaonici_Odnos.txt", "w")
 metrike=[]
-link="../benchmarks/endtoend/us/"
+link="../benchmarks/endtoend/eu/"
 
 def endtoend():
     brojac=0
     ukupno=len(os.listdir(link))/2
-    printProgressBar (0, 100, suffix="\t0 %")
+    printProgressBar (0, 100, suffix="\t 0%")
     for filename in os.listdir(link):
         if filename.endswith(".txt"):
 
@@ -292,8 +292,9 @@ def endtoend():
             metrike.append(iou)
 
             currmetrika=round(sum(metrike)/len(metrike),2)
-            printProgressBar (brojac, ukupno-1, suffix=("\t"+str(currmetrika)+" %"))
             brojac+=1
+            printProgressBar (brojac, ukupno-1, suffix=("\t"+str(currmetrika)+" %"))
+            
 
 
 """def grci():
