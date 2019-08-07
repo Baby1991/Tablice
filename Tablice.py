@@ -61,7 +61,16 @@ def merge (textbox1, textbox2):
     textbox3.append(textbox1[3])
     return tuple(textbox3)
 
+def histogrami(img,sx,sy,ex,ey):
+    img=img[sy:ey,sx:ex]
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    hue, saturation, value = cv2.split(hsv)
 
+    avgSat=sum(saturation)/len(saturation)
+    avgVal=sum(value)/len(value)
+
+    plt.figure()
+    plt.hist(value, bins=10,range=(0,100),density=True)
 
     
 
@@ -237,7 +246,7 @@ def tablica(img,name):
     
     return((x1,y1,x1+w1,y1+h1),granica,text)
 
-text_file = open("zuti_pravougaonici_Odnos.txt", "w")
+text_file = open("Rezultati.txt", "w")
 metrike=[]
 link="../benchmarks/endtoend/fejk/"
 
@@ -260,7 +269,7 @@ def endtoend():
             ex=sx+w
             ey=sy+h
             (sx1,sy1,ex1,ey1),granica,text=tablica(img,name)
-            
+
             detektovano=Rectangle(sx1,sy1,ex1,ey1)
             baza=Rectangle(sx,sy,ex,ey)
             presek=area(baza,detektovano)
@@ -279,6 +288,11 @@ def endtoend():
             else:
                 preostalovreme= str(round(preostalovreme,1))+" s"
             printProgressBar (brojac, ukupno, suffix=("\t"+str(currmetrika)+"%\t"+preostalovreme+"\t\t"))
+
+            plt.figure()
+            plt.imshow(img[sy1:ey1,sx1:ex1])
+            histogrami(img,sx1,sy1,ex1,ey1)
+            plt.show()
                
             
 
@@ -306,7 +320,7 @@ for i in range(0,len(metrike)-1):
 m1=suma/brojac
 
 plt.hist(metrike,bins='auto')
-plt.savefig('histogram_zuti_odnos.jpg')
+plt.savefig('Rezultati_histogram.jpg')
 
 print("\r Ukupno: "+str(metrika)+" % \r")
 text_file.write("Ukupno: "+str(metrika)+" % ("+str(len(metrike))+")\n")
