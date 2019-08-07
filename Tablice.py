@@ -66,11 +66,16 @@ def histogrami(img,sx,sy,ex,ey):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     hue, saturation, value = cv2.split(hsv)
 
-    avgSat=sum(saturation)/len(saturation)
-    avgVal=sum(value)/len(value)
+    avgHue=np.average(hue)/255*360
+    avgSat=np.average(saturation)/255*100
+    avgVal=np.average(value)/255*100
 
-    plt.figure()
-    plt.hist(value, bins=10,range=(0,100),density=True)
+    hue=hue.flatten()/255*360
+    saturation=saturation.flatten()/255*100
+    value=value.flatten()/255*100
+
+    return((avgHue, avgSat, avgVal),(hue, saturation, value))
+    
 
     
 
@@ -172,11 +177,11 @@ def tablica(img,name):
             #(meanbright1,__,__,__)=cv.mean(tester)
             #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
 
-
-            if 0<=(w/h)<=1000:
+            
+           
                 
-                cv2.rectangle(prikaz, (x,y), (x+w,y+h), (255,0,0), 2)
-                dobrekonture.append(contour)
+            cv2.rectangle(prikaz, (x,y), (x+w,y+h), (255,0,0), 2)
+            dobrekonture.append(contour)
                     
         
         
@@ -211,12 +216,12 @@ def tablica(img,name):
     if len(mogucetablice)>0:
         maxscore,tablica=mogucetablice[0]
         for (score,contour) in mogucetablice:
-            #if(score!=0):
-            if 1==1:
-                (x,y,w,h) = cv2.boundingRect(contour)
-                tester=orig[y:y+h,x:x+w]
-                if(score>maxscore):
-                    maxscore,tablica=score,contour
+            (x,y,w,h) = cv2.boundingRect(contour)
+
+            
+
+            if(score>maxscore):
+                maxscore,tablica=score,contour
             
         
     
@@ -248,12 +253,12 @@ def tablica(img,name):
 
 text_file = open("Rezultati.txt", "w")
 metrike=[]
-link="../benchmarks/endtoend/fejk/"
+link="../benchmarks/endtoend/eu/"
 
 def endtoend():
     brojac=0
     ukupno=len(os.listdir(link))/2
-    printProgressBar (0, 100)
+    printProgressBar (0, 100,prefix=("\t"+link+"\t"))
     for filename in os.listdir(link):
         if filename.endswith(".txt"):
             
@@ -270,13 +275,16 @@ def endtoend():
             ey=sy+h
             (sx1,sy1,ex1,ey1),granica,text=tablica(img,name)
 
+            ((avgHue,avgSat,avgVal),(hue,sat,val))=histogrami(img,sx1,sy1,ex1,ey1)
+
             detektovano=Rectangle(sx1,sy1,ex1,ey1)
             baza=Rectangle(sx,sy,ex,ey)
             presek=area(baza,detektovano)
             unija=(ex1-sx1)*(ey1-sy1)+(ex-sx)*(ey-sy)-presek
             iou=presek/unija*100
             #print(name)
-            text_file.write(name+" "+str(iou)+" % ("+str(granica)+") ["+text+"] {"+"}\n")
+
+            text_file.write(name+" "+str(iou)+" % ("+str(granica)+") ["+text+"] { "+str(avgHue)+" : "+str(avgSat)+" : "+str(avgVal)+" }\n")
             metrike.append(iou)
             currmetrika=round(sum(metrike)/len(metrike),1)
             brojac+=1
@@ -287,12 +295,12 @@ def endtoend():
                 preostalovreme= str(round(preostalovreme/60,1))+" min"
             else:
                 preostalovreme= str(round(preostalovreme,1))+" s"
-            printProgressBar (brojac, ukupno, suffix=("\t"+str(currmetrika)+"%\t"+preostalovreme+"\t\t"))
+            printProgressBar (brojac, ukupno,prefix=("\t"+link+"\t"), suffix=("\t"+str(currmetrika)+"%\t"+preostalovreme+"\t\t"))
 
-            plt.figure()
-            plt.imshow(img[sy1:ey1,sx1:ex1])
-            histogrami(img,sx1,sy1,ex1,ey1)
-            plt.show()
+            
+            
+            
+            
                
             
 
