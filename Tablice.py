@@ -15,7 +15,8 @@ Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
 
 def area(a, b):
-    cetiritacke = [[a.xmin, a.ymin], [a.xmax, a.ymax], [b.xmin, b.ymin], [b.xmax, b.ymax]]
+    cetiritacke = [[a.xmin, a.ymin], [a.xmax, a.ymax],
+                   [b.xmin, b.ymin], [b.xmax, b.ymax]]
     x21 = cetiritacke[2][0]
     y21 = cetiritacke[2][1]
     x22 = cetiritacke[3][0]
@@ -37,16 +38,18 @@ def area(a, b):
     arrx.sort()
     return (arrx[2] - arrx[1]) * (arry[2] - arry[1])
 
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+
+def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█'):
+    percent = ("{0:." + str(decimals) + "f}").format(100 *
+                                                     (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
-    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
-    if iteration == total: 
-        print('\n')     
-    
+    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end='\r')
+    if iteration == total:
+        print('\n')
 
-def merge (textbox1, textbox2):
+
+def merge(textbox1, textbox2):
     textbox3 = []
     if textbox1[0] < textbox2[0]:
         textbox3.append(textbox1[0])
@@ -54,45 +57,44 @@ def merge (textbox1, textbox2):
         textbox3.append(textbox2[2])
         textbox3.append(textbox2[3])
         return tuple(textbox3)
-    
+
     textbox3.append(textbox2[0])
     textbox3.append(textbox2[1])
     textbox3.append(textbox1[2])
     textbox3.append(textbox1[3])
     return tuple(textbox3)
 
-def histogrami(img,sx,sy,ex,ey):
-    img=img[sy:ey,sx:ex]
+
+def histogrami(img, sx, sy, ex, ey):
+    img = img[sy:ey, sx:ex]
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     hue, saturation, value = cv2.split(hsv)
 
-    avgHue=np.average(hue)/255*360
-    avgSat=np.average(saturation)/255*100
-    avgVal=np.average(value)/255*100
+    avgHue = np.average(hue)/255*360
+    avgSat = np.average(saturation)/255*100
+    avgVal = np.average(value)/255*100
 
-    hue=hue.flatten()/255*360
-    saturation=saturation.flatten()/255*100
-    value=value.flatten()/255*100
+    hue = hue.flatten()/255*360
+    saturation = saturation.flatten()/255*100
+    value = value.flatten()/255*100
 
     return(avgHue, avgSat, avgVal)
-    
 
-    
 
-def tablica(img,name):
-    orig=img.copy()
-    #text_file.write(str(broj)+"\n") 
+def tablica(img, name):
+    orig = img.copy()
+    # text_file.write(str(broj)+"\n")
 
-    img=orig.copy()
-    prikaz=orig.copy()
-    textboxes=[]
-    granica=1
-    while len(textboxes)<1:
-        textboxes=text_detection.text_detection(img,granica)
+    img = orig.copy()
+    prikaz = orig.copy()
+    textboxes = []
+    granica = 1
+    while len(textboxes) < 1:
+        textboxes = text_detection.text_detection(img, granica)
         '''for txt in textboxes:
             if abs(txt[0] - txt[2]) > 500 or abs(txt[1] - txt[3]) > 300 or abs(txt[0] - txt[2]) / abs(txt[1] - txt[3]) < 1.5:
                 textboxes.remove(txt)'''
-        granica-=0.05
+        granica -= 0.05
     if len(textboxes) > 1:
         i = 0
         while i < len(textboxes):
@@ -102,11 +104,11 @@ def tablica(img,name):
                     textboxes.insert(i + 1, merge(textboxes[i], textboxes[j]))
                     textboxes.pop(i + 1)
                     textboxes.pop(j)
-                j+=1
-            i+=1
+                j += 1
+            i += 1
 
     #img = cv.normalize(img, img, 0, 255, cv.NORM_MINMAX)
-    
+
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     hue, saturation, value = cv2.split(hsv)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
@@ -116,9 +118,10 @@ def tablica(img,name):
     subtract = cv2.subtract(add, blackHat)
     blur = cv2.GaussianBlur(subtract, (5, 5), 0)
 
-    thresh = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9)
-    
-    CannyThresh=cv2.Canny(thresh,0,200,10)
+    thresh = cv2.adaptiveThreshold(
+        blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9)
+
+    CannyThresh = cv2.Canny(thresh, 0, 200, 10)
 
     """
     gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -143,99 +146,88 @@ def tablica(img,name):
     img1 = cv2.erode(img1, (3,3),1)
     img1 = cv2.dilate(img1, (3,3),10)
     """
-    (contours,__)=cv.findContours( CannyThresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
-    (x1,y1,w1,h1)=(0,0,0,0)
+    (contours, __) = cv.findContours(
+        CannyThresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    (x1, y1, w1, h1) = (0, 0, 0, 0)
 
-    height,width = img.shape[:2]
-    blank_image = np.zeros((height,width,3), np.uint8)
-    blank_image=cv2.cvtColor(blank_image,cv2.COLOR_BGR2GRAY)
-    cv2.drawContours(blank_image,contours,-1,(255,255,255),1)
-    blank_image=cv2.cvtColor(blank_image,cv2.COLOR_GRAY2RGB)
-    blanksave=Image.fromarray(blank_image)
+    height, width = img.shape[:2]
+    blank_image = np.zeros((height, width, 3), np.uint8)
+    blank_image = cv2.cvtColor(blank_image, cv2.COLOR_BGR2GRAY)
+    cv2.drawContours(blank_image, contours, -1, (255, 255, 255), 1)
+    blank_image = cv2.cvtColor(blank_image, cv2.COLOR_GRAY2RGB)
+    blanksave = Image.fromarray(blank_image)
     blanksave.save("../Rezultati/{0}_ivice.jpg".format(name))
 
-    dobrekonture=[]
-    mogucetablice=[]
+    dobrekonture = []
+    mogucetablice = []
 
-    cv.drawContours(prikaz, contours, -1, (0,0,255), 1)
+    cv.drawContours(prikaz, contours, -1, (0, 0, 255), 1)
 
-    for (sx,sy,ex,ey) in textboxes:
-        cv.rectangle(prikaz, (sx,sy), (ex,ey), (255,255,0), 2)
-        
+    for (sx, sy, ex, ey) in textboxes:
+        cv.rectangle(prikaz, (sx, sy), (ex, ey), (255, 255, 0), 2)
+
     for contour in contours:
-        (x,y,w,h) = cv2.boundingRect(contour)
+        (x, y, w, h) = cv2.boundingRect(contour)
         overlay = prikaz.copy()
 
         cv2.rectangle(overlay, (x, y), (x+w, y+h), (0, 255, 0), 1)
-        alpha = 0.7 
+        alpha = 0.7
         prikaz = cv2.addWeighted(overlay, alpha, prikaz, 1 - alpha, 0)
 
         #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
-        if 1.5<=(w/h)<=1000 and 1000>w>30 and 1000>h>5:
-            #tester=orig[y:y+h,x:x+w]
+        if 1.5 <= (w/h) <= 1000 and 1000 > w > 30 and 1000 > h > 5:
+            # tester=orig[y:y+h,x:x+w]
             #tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
-            #(meanbright1,__,__,__)=cv.mean(tester)
+            # (meanbright1,__,__,__)=cv.mean(tester)
             #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
 
-            
-           
-                
-            cv2.rectangle(prikaz, (x,y), (x+w,y+h), (255,0,0), 2)
+            cv2.rectangle(prikaz, (x, y), (x+w, y+h), (255, 0, 0), 2)
             dobrekonture.append(contour)
-                    
-        
-        
+
     font = cv2.FONT_HERSHEY_SIMPLEX
-        
-        
+
     for contour in dobrekonture:
-        A=0
-        score=0
-        (x,y,w,h) = cv2.boundingRect(contour)
-        bound=Rectangle(x,y,x+w,y+h)
-        boundarea=w*h
-        
-        
-        
-        for (sx,sy,ex,ey) in textboxes:
-            r=Rectangle(sx,sy,ex,ey)
-            
-            if area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 70 > A:
-                A = area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 70
-               
-        score=A 
-        
-        cv2.putText(prikaz,str(round(score,0)),(x,y), font, 0.4,(0,0,0),2,cv2.LINE_AA,)
-        
-        mogucetablice.append((score,contour))
-                
-        
-        
-    prikazslika=Image.fromarray(prikaz)
+        A = 0
+        score = 0
+        (x, y, w, h) = cv2.boundingRect(contour)
+        bound = Rectangle(x, y, x+w, y+h)
+        boundarea = w*h
+
+        for (sx, sy, ex, ey) in textboxes:
+            r = Rectangle(sx, sy, ex, ey)
+
+            if area(r, bound)/boundarea*100 + area(r, bound)/((ex-sx)*(ey-sy)) * 70 > A:
+                A = area(r, bound)/boundarea*100 + \
+                    area(r, bound)/((ex-sx)*(ey-sy)) * 70
+
+        score = A
+
+        cv2.putText(prikaz, str(round(score, 0)), (x, y),
+                    font, 0.4, (0, 0, 0), 2, cv2.LINE_AA,)
+
+        mogucetablice.append((score, contour))
+
+    prikazslika = Image.fromarray(prikaz)
     prikazslika.save("../Rezultati/{0}_detekcija.jpg".format(name))
-    if len(mogucetablice)>0:
-        maxscore,tablica=mogucetablice[0]
-        for (score,contour) in mogucetablice:
-            (x,y,w,h) = cv2.boundingRect(contour)
+    if len(mogucetablice) > 0:
+        maxscore, tablica = mogucetablice[0]
+        for (score, contour) in mogucetablice:
+            (x, y, w, h) = cv2.boundingRect(contour)
 
-            
+            if(score > maxscore):
+                maxscore, tablica = score, contour
 
-            if(score>maxscore):
-                maxscore,tablica=score,contour
-            
-        
-    
-    
     orig = cv.cvtColor(orig, cv.COLOR_BGR2RGB)
 
     try:
-        (x1,y1,w1,h1) = cv2.boundingRect(tablica)
-        orig=orig[y1:y1+h1,x1:x1+w1]
+        (x1, y1, w1, h1) = cv2.boundingRect(tablica)
+        orig = orig[y1:y1+h1, x1:x1+w1]
         raise
     except:
-        cv2.putText(orig,"OVO JE LOS PROGRAM!!!!",(10,300), font, 2,(255,0,0),10,cv2.LINE_AA)
-    
-    text=pytesseract.image_to_string(orig)
+        cv2.putText(orig, "OVO JE LOS PROGRAM!!!!", (10, 300),
+                    font, 2, (255, 0, 0), 10, cv2.LINE_AA)
+
+    text = pytesseract.image_to_string(orig)
     #print("Pytesseract: ", text)
     """
     plt.figure()
@@ -244,66 +236,64 @@ def tablica(img,name):
     plt.imshow(orig)
     plt.show()
     """
-    #text_file.write(text+"\n") 
-    orig=cv.cvtColor(orig,cv.COLOR_BGR2RGB)
-    origslika=Image.fromarray(orig)
+    # text_file.write(text+"\n")
+    orig = cv.cvtColor(orig, cv.COLOR_BGR2RGB)
+    origslika = Image.fromarray(orig)
     origslika.save("../Rezultati/{0}_tablica.jpg".format(name))
-    
-    return((x1,y1,x1+w1,y1+h1),granica,text)
+
+    return((x1, y1, x1+w1, y1+h1), granica, text)
+
 
 text_file = open("Rezultati.txt", "w")
-metrike=[]
-link="../benchmarks/endtoend/eu/"
+metrike = []
+link = "../benchmarks/endtoend/fejk/"
+
 
 def endtoend():
-    brojac=0
-    ukupno=len(os.listdir(link))/2
-    printProgressBar (0, 100,prefix=("\t"+link+"\t"))
-    text_file.write("Ime\t\tIoU\t\tGranica\t\tText\t\t{ Hue : Saturation : Value }\n")    
+    brojac = 0
+    ukupno = len(os.listdir(link))/2
+    printProgressBar(0, 100, prefix=("\t"+link+"\t"))
+    text_file.write(
+        "Ime\t\tIoU\t\tGranica\t\tText\t\t{ Hue : Saturation : Value }\n")
     for filename in os.listdir(link):
         if filename.endswith(".txt"):
-            
+
             f = open(link+"{0}".format(filename), "r")
-            txt=f.read().split('\t')
-            fajl=txt[0]
-            img=cv2.imread(link+"{0}".format(fajl))
-            name=fajl.split('.')[0]
-            sx=int(txt[1])
-            sy=int(txt[2])
-            w=int(txt[3])
-            h=int(txt[4])
-            ex=sx+w
-            ey=sy+h
-            (sx1,sy1,ex1,ey1),granica,text=tablica(img,name)
+            txt = f.read().split('\t')
+            fajl = txt[0]
+            img = cv2.imread(link+"{0}".format(fajl))
+            name = fajl.split('.')[0]
+            sx = int(txt[1])
+            sy = int(txt[2])
+            w = int(txt[3])
+            h = int(txt[4])
+            ex = sx+w
+            ey = sy+h
+            (sx1, sy1, ex1, ey1), granica, text = tablica(img, name)
 
-            (avgHue,avgSat,avgVal)=histogrami(img,sx1,sy1,ex1,ey1)
+            (avgHue, avgSat, avgVal) = histogrami(img, sx1, sy1, ex1, ey1)
 
-            detektovano=Rectangle(sx1,sy1,ex1,ey1)
-            baza=Rectangle(sx,sy,ex,ey)
-            presek=area(baza,detektovano)
-            unija=(ex1-sx1)*(ey1-sy1)+(ex-sx)*(ey-sy)-presek
-            iou=presek/unija*100
-            #print(name)
+            detektovano = Rectangle(sx1, sy1, ex1, ey1)
+            baza = Rectangle(sx, sy, ex, ey)
+            presek = area(baza, detektovano)
+            unija = (ex1-sx1)*(ey1-sy1)+(ex-sx)*(ey-sy)-presek
+            iou = presek/unija*100
+            # print(name)
 
-            text_file.write(name+"\t\t"+str(round(iou,2))+" %\t\t("+str(round(granica,2))+")\t\t["+text+"]\t\t{ "+str(round(avgHue,2))+" : "+str(round(avgSat,2))+" : "+str(round(avgVal,2))+" }\n")
+            text_file.write(name+"\t\t"+str(round(iou, 2))+" %\t\t("+str(round(granica, 2))+")\t\t["+text+"]\t\t{ "+str(
+                round(avgHue, 2))+" : "+str(round(avgSat, 2))+" : "+str(round(avgVal, 2))+" }\n")
             metrike.append(iou)
-            currmetrika=round(sum(metrike)/len(metrike),1)
-            brojac+=1
-            dosad=time.time()-start
-            prosecnovreme=dosad/brojac
-            preostalovreme=(ukupno-brojac)*prosecnovreme
-            if preostalovreme>=60:
-                preostalovreme= str(round(preostalovreme/60,1))+" min"
+            currmetrika = round(sum(metrike)/len(metrike), 1)
+            brojac += 1
+            dosad = time.time()-start
+            prosecnovreme = dosad/brojac
+            preostalovreme = (ukupno-brojac)*prosecnovreme
+            if preostalovreme >= 60:
+                preostalovreme = str(round(preostalovreme/60, 1))+" min"
             else:
-                preostalovreme= str(round(preostalovreme,1))+" s"
-            printProgressBar (brojac, ukupno,prefix=("\t"+link+"\t"), suffix=("\t"+str(currmetrika)+"%\t"+preostalovreme+"\t\t"))
-
-            
-            
-            
-            
-               
-            
+                preostalovreme = str(round(preostalovreme, 1))+" s"
+            printProgressBar(brojac, ukupno, prefix=(
+                "\t"+link+"\t"), suffix=("\t"+str(currmetrika)+"%\t"+preostalovreme+"\t\t"))
 
 
 """def grci():
@@ -312,27 +302,28 @@ def endtoend():
 """
 
 
-
-start=time.time()
+start = time.time()
 endtoend()
-vreme=time.time()-start   
+vreme = time.time()-start
 
 text_file.write("\n")
-metrika=sum(metrike)/len(metrike)
-brojac=0
-suma=0
-prosecnovreme=vreme/len(metrike)
-for i in range(0,len(metrike)):
-    if metrike[i]>50:
-        suma+=metrike[i]
-        brojac+=1
-m1=suma/brojac
+metrika = sum(metrike)/len(metrike)
+brojac = 0
+suma = 0
+prosecnovreme = vreme/len(metrike)
+for i in range(0, len(metrike)):
+    if metrike[i] > 50:
+        suma += metrike[i]
+        brojac += 1
+m1 = suma/brojac
 
-plt.hist(metrike,bins='auto')
+plt.hist(metrike, bins='auto')
 plt.savefig('Rezultati_histogram.jpg')
 
-print("\t\r Ukupno: "+str(round(metrika,2))+" % \r")
-text_file.write("Ukupno: "+str(round(metrika,2))+" % ("+str(len(metrike))+")\n")
-text_file.write("Vece od 50%: "+str(round(m1,2))+" % ("+str(brojac)+")\n")
-text_file.write("Prosecno vreme po slici: "+str(round(prosecnovreme,2))+" s ("+str(round(vreme/60,2))+" min)\n")
+print("\t\r Ukupno: "+str(round(metrika, 2))+" % \r")
+text_file.write("Ukupno: "+str(round(metrika, 2)) +
+                " % ("+str(len(metrike))+")\n")
+text_file.write("Vece od 50%: "+str(round(m1, 2))+" % ("+str(brojac)+")\n")
+text_file.write("Prosecno vreme po slici: "+str(round(prosecnovreme, 2)
+                                                )+" s ("+str(round(vreme/60, 2))+" min)\n")
 text_file.close()
