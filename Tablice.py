@@ -80,7 +80,9 @@ def histogrami(img,sx,sy,ex,ey):
     
 
 def tablica(img,name):
+    pomocna = 1
     orig=img.copy()
+    kopija = orig.copy()
     #text_file.write(str(broj)+"\n") 
 
     img=orig.copy()
@@ -187,6 +189,7 @@ def tablica(img,name):
         
     font = cv2.FONT_HERSHEY_SIMPLEX
         
+    skorovi = []
         
     for contour in dobrekonture:
         A=0
@@ -203,7 +206,8 @@ def tablica(img,name):
             if area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 70 > A:
                 A = area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 70
                
-        score=A 
+        score=A
+        skorovi.append(score)
         
         cv2.putText(prikaz,str(round(score,0)),(x,y), font, 0.4,(0,0,0),2,cv2.LINE_AA,)
         
@@ -222,20 +226,67 @@ def tablica(img,name):
 
             if(score>maxscore):
                 maxscore,tablica=score,contour
-            
         
-    
+        minsat = 500
+        pozicija = 0
+        pozicija2 = 0
+        if maxscore == 0:
+            pomocna = 0
+            i = 0
+            for crkotina in mogucetablice:
+                (x,y,w,h) = cv2.boundingRect(crkotina[1])
+                pg=Rectangle(x,y,x+w,y+h)
+                (_, sat, _) = histogrami(kopija, pg[0], pg[1], pg[2], pg[3])
+                if sat < minsat:
+                    minsat = sat
+                    pozicija = i
+                i+=1
+            (minsat, tablica) = mogucetablice[i]
+            
+            minsat = 500
+            k = 0
+            for txt in textboxes:
+                (_, sat, _) = histogrami(kopija, txt[0], txt[1], txt[2], txt[3])
+                if sat < minsat:
+                    minsat = sat
+                    pozicija2 = i
+                k+=1
+                
     
     orig = cv.cvtColor(orig, cv.COLOR_BGR2RGB)
 
-    try:
+    if pomocna == 0:
+        (x1,y1,w1,h1) = cv2.boundingRect(tablica)
+        (_, sat1, _) = histogrami(kopija, x1, y1, x1 + w1, y1 + h1)
+        (_, sat2, _) = histogrami(kopija, textboxes[pozicija2][0], textboxes[pozicija2][1], textboxes[pozicija2][2], textboxes[pozicija2][3])
+        if sat1 < sat2:
+            orig=orig[y1:y1+h1,x1:x1+w1]
+        else:
+            orig=orig[textboxes[pozicija2][1]:textboxes[pozicija2][3],textboxes[pozicija2][0]:textboxes[pozicija2][2]]
+    else:
         (x1,y1,w1,h1) = cv2.boundingRect(tablica)
         orig=orig[y1:y1+h1,x1:x1+w1]
-        raise
-    except:
-        cv2.putText(orig,"OVO JE LOS PROGRAM!!!!",(10,300), font, 2,(255,0,0),10,cv2.LINE_AA)
     
-    text=pytesseract.image_to_string(orig)
+    #try:
+    if 1:
+        if pomocna == 0:
+            (x1,y1,w1,h1) = cv2.boundingRect(tablica)
+            (_, sat1, _) = histogrami(kopija, x1, y1, x1 + w1, y1 + h1)
+            (_, sat2, _) = histogrami(kopija, textboxes[pozicija2][0], textboxes[pozicija2][1], textboxes[pozicija2][2], textboxes[pozicija2][3])
+            if sat1 < sat2:
+                orig=orig[y1:y1+h1,x1:x1+w1]
+            else:
+                orig=orig[textboxes[pozicija2][1]:textboxes[pozicija2][3],textboxes[pozicija2][0]:textboxes[pozicija2][2]]
+        '''
+        else:
+            (x1,y1,w1,h1) = cv2.boundingRect(tablica)
+            orig=orig[y1:y1+h1,x1:x1+w1]'''
+        #raise
+    #except:
+    #    cv2.putText(orig,"OVO JE LOS PROGRAM!!!!",(10,300), font, 2,(255,0,0),10,cv2.LINE_AA)
+    
+    #text=pytesseract.image_to_string(orig)
+    text=""
     #print("Pytesseract: ", text)
     """
     plt.figure()
@@ -245,7 +296,9 @@ def tablica(img,name):
     plt.show()
     """
     #text_file.write(text+"\n") 
-    orig=cv.cvtColor(orig,cv.COLOR_BGR2RGB)
+    #plt.imshow(orig)
+    #plt.show()
+    orig=cv.cvtColor(orig, cv.COLOR_BGR2RGB)
     origslika=Image.fromarray(orig)
     origslika.save("../Rezultati/{0}_tablica.jpg".format(name))
     
