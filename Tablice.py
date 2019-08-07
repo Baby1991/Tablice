@@ -74,7 +74,7 @@ def histogrami(img,sx,sy,ex,ey):
     saturation=saturation.flatten()/255*100
     value=value.flatten()/255*100
 
-    return((avgHue, avgSat, avgVal),(hue, saturation, value))
+    return(avgHue, avgSat, avgVal)
     
 
     
@@ -276,7 +276,7 @@ def endtoend():
             ey=sy+h
             (sx1,sy1,ex1,ey1),granica,text=tablica(img,name)
 
-            ((avgHue,avgSat,avgVal),(hue,sat,val))=histogrami(img,sx1,sy1,ex1,ey1)
+            (avgHue,avgSat,avgVal)=histogrami(img,sx1,sy1,ex1,ey1)
 
             detektovano=Rectangle(sx1,sy1,ex1,ey1)
             baza=Rectangle(sx,sy,ex,ey)
