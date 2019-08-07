@@ -156,7 +156,7 @@ def tablica(img,name):
         prikaz = cv2.addWeighted(overlay, alpha, prikaz, 1 - alpha, 0)
 
         #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
-        if 2<=(w/h)<=1000 and 1000>w>50 and 1000>h>0:
+        if 2<=(w/h)<=1000 and 1000>w>30 and 1000>h>5:
             #tester=orig[y:y+h,x:x+w]
             #tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
             #(meanbright1,__,__,__)=cv.mean(tester)
@@ -182,12 +182,12 @@ def tablica(img,name):
         #cv2.putText(prikaz,str(index),(x,y), font, 1,(0,0,0),2,cv2.LINE_AA)
         tester=imgbw[y:y+h,x:x+w]
         tester = cv.normalize(tester, tester, 0, 255, cv.NORM_MINMAX)
-        #(meanbright,__,__,__)=cv.mean(tester)
+        (meanbright,__,__,__)=cv.mean(tester)
         bound=Rectangle(x,y,x+w,y+h)
         boundarea=w*h
         histr = cv2.calcHist([tester],[0],None,[256],[0,256])
-        beli=sum(histr[190:255])
-        crni=sum(histr[0:64])
+        beli=sum(histr[int(meanbright):255])
+        crni=sum(histr[0:int(meanbright)])
         
         odnos=beli/crni
         """
