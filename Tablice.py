@@ -171,7 +171,7 @@ def tablica(img,name):
         prikaz = cv2.addWeighted(overlay, alpha, prikaz, 1 - alpha, 0)
 
         #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
-        if 2<=(w/h)<=1000 and 1000>w>30 and 1000>h>5:
+        if 1.5<=(w/h)<=1000 and 1000>w>30 and 1000>h>5:
             #tester=orig[y:y+h,x:x+w]
             #tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
             #(meanbright1,__,__,__)=cv.mean(tester)
@@ -259,6 +259,7 @@ def endtoend():
     brojac=0
     ukupno=len(os.listdir(link))/2
     printProgressBar (0, 100,prefix=("\t"+link+"\t"))
+    text_file.write("Ime\t\tIoU\t\tGranica\t\tText\t\t{ Hue : Saturation : Value }\n")    
     for filename in os.listdir(link):
         if filename.endswith(".txt"):
             
@@ -284,7 +285,7 @@ def endtoend():
             iou=presek/unija*100
             #print(name)
 
-            text_file.write(name+" "+str(iou)+" % ("+str(granica)+") ["+text+"] { "+str(avgHue)+" : "+str(avgSat)+" : "+str(avgVal)+" }\n")
+            text_file.write(name+"\t\t"+str(round(iou,2))+" %\t\t("+str(round(granica,2))+")\t\t["+text+"]\t\t{ "+str(round(avgHue,2))+" : "+str(round(avgSat,2))+" : "+str(round(avgVal,2))+" }\n")
             metrike.append(iou)
             currmetrika=round(sum(metrike)/len(metrike),1)
             brojac+=1
@@ -321,7 +322,7 @@ metrika=sum(metrike)/len(metrike)
 brojac=0
 suma=0
 prosecnovreme=vreme/len(metrike)
-for i in range(0,len(metrike)-1):
+for i in range(0,len(metrike)):
     if metrike[i]>50:
         suma+=metrike[i]
         brojac+=1
@@ -330,8 +331,8 @@ m1=suma/brojac
 plt.hist(metrike,bins='auto')
 plt.savefig('Rezultati_histogram.jpg')
 
-print("\r Ukupno: "+str(metrika)+" % \r")
-text_file.write("Ukupno: "+str(metrika)+" % ("+str(len(metrike))+")\n")
-text_file.write("Vece od 50%: "+str(m1)+" % ("+str(brojac)+")\n")
-text_file.write("Prosecno vreme po slici: "+str(prosecnovreme)+" s ("+str(vreme/60)+" min)\n")
+print("\t\r Ukupno: "+str(round(metrika,2))+" % \r")
+text_file.write("Ukupno: "+str(round(metrika,2))+" % ("+str(len(metrike))+")\n")
+text_file.write("Vece od 50%: "+str(round(m1,2))+" % ("+str(brojac)+")\n")
+text_file.write("Prosecno vreme po slici: "+str(round(prosecnovreme,2))+" s ("+str(round(vreme/60,2))+" min)\n")
 text_file.close()
