@@ -315,9 +315,10 @@ def endtoend():
     brojac = 0
     ukupno = len(os.listdir(link))/2
     printProgressBar(0, 100, prefix=("\t"+link+"\t"))
-    text_file.write("Fajl:\t"+link+"\n")
+    text_file.write("Fajl:\t"+link+"\n\n")
     text_file.write(
         "Ime\t\tIoU\t\tGranica\t\tText\t\t{ Hue : Saturation : Value }\n")
+    text_file.flush()
     for filename in os.listdir(link):
         if filename.endswith(".txt"):
 
