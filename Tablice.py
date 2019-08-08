@@ -315,6 +315,7 @@ def endtoend():
     brojac = 0
     ukupno = len(os.listdir(link))/2
     printProgressBar(0, 100, prefix=("\t"+link+"\t"))
+    text_file.write("Fajl:\t"+link+"\n")
     text_file.write(
         "Ime\t\tIoU\t\tGranica\t\tText\t\t{ Hue : Saturation : Value }\n")
     for filename in os.listdir(link):
@@ -385,6 +386,7 @@ plt.hist(metrike, bins='auto')
 plt.savefig('Rezultati_histogram.jpg')
 
 print("\t\r Ukupno: "+str(round(metrika, 2))+" % \r")
+
 text_file.write("Ukupno: "+str(round(metrika, 2)) +
                 " % ("+str(len(metrike))+")\n")
 text_file.write("Vece od 50%: "+str(round(m1, 2))+" % ("+str(brojac)+")\n")
