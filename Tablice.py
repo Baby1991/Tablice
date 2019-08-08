@@ -317,7 +317,7 @@ def endtoend():
     printProgressBar(0, 100, prefix=("\t"+link+"\t"))
     text_file.write("Fajl:\t"+link+"\n\n")
     text_file.write(
-        "Ime\t\tIoU\t\tGranica\t\tText\t\t{ Hue : Saturation : Value }\n")
+        "Ime\t\tIoU\t\tGranica\t\tText\t\t{Hue\t:\tSat\t:\tVal}\n")
     text_file.flush()
     for filename in os.listdir(link):
         if filename.endswith(".txt"):
@@ -344,8 +344,8 @@ def endtoend():
             iou = presek/unija*100
             # print(name)
 
-            text_file.write(name+"\t\t"+str(round(iou, 2))+" %\t\t("+str(round(granica, 2))+")\t\t["+text+"]\t\t{ "+str(
-                round(avgHue, 2))+" : "+str(round(avgSat, 2))+" : "+str(round(avgVal, 2))+" }\n")
+            text_file.write(name+"\t\t"+str(round(iou, 2))+"%\t\t("+str(round(granica, 2))+")\t\t["+text+"]\t\t{"+str(
+                round(avgHue, 1))+"\t:\t"+str(round(avgSat, 1))+"\t:\t"+str(round(avgVal, 1))+"}\n")
             text_file.flush()
 
             metrike.append(iou)
