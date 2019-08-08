@@ -306,6 +306,7 @@ def tablica(img,name):
 
 
 text_file = open("Rezultati.txt", "w")
+#text_file = open("Rezultati.txt", "a")
 metrike = []
 link = "../benchmarks/endtoend/fejk/"
 
@@ -343,6 +344,8 @@ def endtoend():
 
             text_file.write(name+"\t\t"+str(round(iou, 2))+" %\t\t("+str(round(granica, 2))+")\t\t["+text+"]\t\t{ "+str(
                 round(avgHue, 2))+" : "+str(round(avgSat, 2))+" : "+str(round(avgVal, 2))+" }\n")
+            text_file.flush()
+
             metrike.append(iou)
             currmetrika = round(sum(metrike)/len(metrike), 1)
             brojac += 1
@@ -386,5 +389,5 @@ text_file.write("Ukupno: "+str(round(metrika, 2)) +
                 " % ("+str(len(metrike))+")\n")
 text_file.write("Vece od 50%: "+str(round(m1, 2))+" % ("+str(brojac)+")\n")
 text_file.write("Prosecno vreme po slici: "+str(round(prosecnovreme, 2)
-                                                )+" s ("+str(round(vreme/60, 2))+" min)\n")
+                                                )+" s ("+str(round(vreme/60, 2))+" min)\n\n")
 text_file.close()
