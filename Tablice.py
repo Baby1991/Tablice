@@ -241,7 +241,7 @@ def tablica(img,name):
                     minsat = sat
                     pozicija = i
                 i+=1
-            (minsat, tablica) = mogucetablice[i]
+            (minsat, tablica) = mogucetablice[pozicija]
             
             minsat = 500
             k = 0
@@ -249,7 +249,7 @@ def tablica(img,name):
                 (_, sat, _) = histogrami(kopija, txt[0], txt[1], txt[2], txt[3])
                 if sat < minsat:
                     minsat = sat
-                    pozicija2 = i
+                    pozicija2 = k
                 k+=1
                 
     
@@ -257,8 +257,8 @@ def tablica(img,name):
 
     if pomocna == 0:
         (x1,y1,w1,h1) = cv2.boundingRect(tablica)
-        (_, sat1, _) = histogrami(kopija, x1, y1, x1 + w1, y1 + h1)
-        (_, sat2, _) = histogrami(kopija, textboxes[pozicija2][0], textboxes[pozicija2][1], textboxes[pozicija2][2], textboxes[pozicija2][3])
+        (_, sat1, _) = histogrami(img, x1, y1, x1 + w1, y1 + h1)
+        (_, sat2, _) = histogrami(img, textboxes[pozicija2][0], textboxes[pozicija2][1], textboxes[pozicija2][2], textboxes[pozicija2][3])
         if sat1 < sat2:
             orig=orig[y1:y1+h1,x1:x1+w1]
         else:
@@ -266,9 +266,9 @@ def tablica(img,name):
     else:
         (x1,y1,w1,h1) = cv2.boundingRect(tablica)
         orig=orig[y1:y1+h1,x1:x1+w1]
-    
+    #plt.imshow(orig)
     #try:
-    if 1:
+    if False:
         if pomocna == 0:
             (x1,y1,w1,h1) = cv2.boundingRect(tablica)
             (_, sat1, _) = histogrami(kopija, x1, y1, x1 + w1, y1 + h1)
