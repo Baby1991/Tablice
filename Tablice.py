@@ -102,7 +102,7 @@ def tablica(img,name):
         while i < len(textboxes):
             j = i + 1
             while j < len(textboxes):
-                if (abs(textboxes[i][2] - textboxes[j][0]) < 20 or abs(textboxes[i][0] - textboxes[j][2]) < 20) or (abs(textboxes[i][3] - textboxes[j][1]) < 10 or abs(textboxes[i][1] - textboxes[j][3]) < 10):
+                if (abs(textboxes[i][2] - textboxes[j][0]) < 40 or abs(textboxes[i][0] - textboxes[j][2]) < 40) or (abs(textboxes[i][3] - textboxes[j][1]) < 10 or abs(textboxes[i][1] - textboxes[j][3]) < 10):
                     textboxes.insert(i + 1, merge(textboxes[i], textboxes[j]))
                     textboxes.pop(i + 1)
                     textboxes.pop(j)
@@ -158,7 +158,7 @@ def tablica(img,name):
     cv2.drawContours(blank_image, contours, -1, (255, 255, 255), 1)
     blank_image = cv2.cvtColor(blank_image, cv2.COLOR_GRAY2RGB)
     blanksave = Image.fromarray(blank_image)
-    blanksave.save("../Rezultati/{0}_ivice.jpg".format(name))
+    blanksave.save("../RezultatiBrazil/{0}_ivice.jpg".format(name))
 
     dobrekonture = []
     mogucetablice = []
@@ -177,7 +177,7 @@ def tablica(img,name):
         prikaz = cv2.addWeighted(overlay, alpha, prikaz, 1 - alpha, 0)
 
         #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
-        if 1.5 <= (w/h) <= 1000 and 1000 > w > 30 and 1000 > h > 5:
+        if 1.5 <= (w/h) <= 10 and 1000 > w > 100 and 1000 > h > 5:
             # tester=orig[y:y+h,x:x+w]
             #tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
             # (meanbright1,__,__,__)=cv.mean(tester)
@@ -202,7 +202,7 @@ def tablica(img,name):
         for (sx,sy,ex,ey) in textboxes:
             r=Rectangle(sx,sy,ex,ey)
             
-            if area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 70 > A:
+            if area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 100 > A:
                 A = area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 70
                
         score=A
@@ -215,17 +215,25 @@ def tablica(img,name):
         
         
     prikazslika=Image.fromarray(prikaz)
-    prikazslika.save("../Rezultati/{0}_detekcija.jpg".format(name))
+    prikazslika.save("../RezultatiBrazil/{0}_detekcija.jpg".format(name))
+    skorovi = []
+    w1 = 0
+    h1 = 0
     if len(mogucetablice) > 0:
         maxscore, tablica = mogucetablice[0]
         for (score, contour) in mogucetablice:
             (x, y, w, h) = cv2.boundingRect(contour)
-
+            skorovi.append(score)
             if(score > maxscore):
                 maxscore, tablica = score, contour
-
-            if(score>maxscore):
-                maxscore,tablica=score,contour
+                w1 = w
+                h1 = h
+    
+    #if h != 0 and h1 != 0:
+     #   for (score, contour) in mogucetablice:
+      #      (x, y, w, h) = cv2.boundingRect(contour)
+       #     if score != 0 and maxscore - score < maxscore / 4 and w / h < 6 and w / h > w1 / h1:
+        #        maxscore, tablica = score, contour
         
         minsat = 500
         pozicija = 0
@@ -300,7 +308,7 @@ def tablica(img,name):
     #plt.show()
     orig=cv.cvtColor(orig, cv.COLOR_BGR2RGB)
     origslika=Image.fromarray(orig)
-    origslika.save("../Rezultati/{0}_tablica.jpg".format(name))
+    origslika.save("../RezultatiBrazil/{0}_tablica.jpg".format(name))
 
     return((x1, y1, x1+w1, y1+h1), granica, text)
 
@@ -308,7 +316,7 @@ def tablica(img,name):
 text_file = open("Rezultati.txt", "w")
 #text_file = open("Rezultati.txt", "a")
 metrike = []
-link = "../benchmarks/endtoend/fejk/"
+link = "../crkotina/"
 
 
 def endtoend():
@@ -329,8 +337,8 @@ def endtoend():
             name = fajl.split('.')[0]
             sx = int(txt[1])
             sy = int(txt[2])
-            w = int(txt[3])
-            h = int(txt[4])
+            w = int(txt[3])-int(txt[1])
+            h = int(txt[4])-int(txt[2])
             ex = sx+w
             ey = sy+h
             (sx1, sy1, ex1, ey1), granica, text = tablica(img, name)
@@ -342,7 +350,7 @@ def endtoend():
             presek = area(baza, detektovano)
             unija = (ex1-sx1)*(ey1-sy1)+(ex-sx)*(ey-sy)-presek
             iou = presek/unija*100
-            # print(name)
+            #print(iou, name)
 
             text_file.write(name+"\t\t"+str(round(iou, 2))+"%\t\t("+str(round(granica, 2))+")\t\t["+text+"]\t\t{"+str(
                 round(avgHue, 1))+"\t:\t"+str(round(avgSat, 1))+"\t:\t"+str(round(avgVal, 1))+"}\n")
@@ -353,13 +361,13 @@ def endtoend():
             brojac += 1
             dosad = time.time()-start
             prosecnovreme = dosad/brojac
-            preostalovreme = (ukupno-brojac)*prosecnovreme
+            preostalovreme = (ukupno-brojac) * prosecnovreme
             if preostalovreme >= 60:
-                preostalovreme = str(round(preostalovreme/60, 1))+" min"
+                preostalovreme = str(round(preostalovreme/60, 1)) +" min"
             else:
                 preostalovreme = str(round(preostalovreme, 1))+" s"
             printProgressBar(brojac, ukupno, prefix=(
-                "\t"+link+"\t"), suffix=("\t"+str(currmetrika)+"%\t"+preostalovreme+"\t\t"))
+                    "\t"+link+"\t"), suffix=("\t"+str(currmetrika)+"%\t"+preostalovreme+"\t\t"))
 
 
 """def grci():
@@ -381,7 +389,8 @@ for i in range(0, len(metrike)):
     if metrike[i] > 50:
         suma += metrike[i]
         brojac += 1
-m1 = suma/brojac
+if brojac != 0:
+    m1 = suma/brojac
 
 plt.hist(metrike, bins='auto')
 plt.savefig('Rezultati_histogram.jpg')
