@@ -386,7 +386,7 @@ brojac = 0
 suma = 0
 prosecnovreme = vreme/len(metrike)
 for i in range(0, len(metrike)):
-    if metrike[i] > 50:
+    if metrike[i] > 60:
         suma += metrike[i]
         brojac += 1
 if brojac != 0:
@@ -399,7 +399,7 @@ print("\t\r Ukupno: "+str(round(metrika, 2))+" % \r")
 
 text_file.write("Ukupno: "+str(round(metrika, 2)) +
                 " % ("+str(len(metrike))+")\n")
-text_file.write("Vece od 50%: "+str(round(m1, 2))+" % ("+str(brojac)+")\n")
+text_file.write("Vece od 50%: "+str(round(m1, 2))+" % ("+str(brojac)+") ["+str(round(procent, 1)) +" %]\n")
 text_file.write("Prosecno vreme po slici: "+str(round(prosecnovreme, 2)
                                                 )+" s ("+str(round(vreme/60, 2))+" min)\n\n")
 text_file.close()
