@@ -1,5 +1,6 @@
 {
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,
-    "python.linting.banditEnabled": false
+    "python.linting.banditEnabled": false,
+    "python.pythonPath": "C:\\Users\\T420\\AppData\\Local\\Programs\\Python\\Python37\\python.exe"
 }
