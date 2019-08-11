@@ -303,13 +303,18 @@ def tablica(img, name):
         (x1,y1,w1,h1) = cv2.boundingRect(tablica)
         (_, sat1, _) = histogrami(img, x1, y1, x1 + w1, y1 + h1)
         (_, sat2, _) = histogrami(img, textboxes[pozicija2][0], textboxes[pozicija2][1], textboxes[pozicija2][2], textboxes[pozicija2][3])
+        
+        """
         if sat1 < sat2:
-            orig=orig[y1:y1+h1,x1:x1+w1]
+            #orig=orig[y1:y1+h1,x1:x1+w1]
         else:
-            orig=orig[textboxes[pozicija2][1]:textboxes[pozicija2][3],textboxes[pozicija2][0]:textboxes[pozicija2][2]]
+            #orig=orig[textboxes[pozicija2][1]:textboxes[pozicija2][3],textboxes[pozicija2][0]:textboxes[pozicija2][2]]    
+        """
+        
+        if sat2>sat1:
+            (x1,y1,w1,h1)=tuple(textboxes[pozicija2][0])
     else:
         (x1,y1,w1,h1) = cv2.boundingRect(tablica)
-        orig=orig[y1:y1+h1,x1:x1+w1]
     
     if CRTAJ:
         text=pytesseract.image_to_string(orig)
@@ -317,6 +322,7 @@ def tablica(img, name):
         text="" 
     
     if CRTAJ:
+        orig=orig[y1:y1+h1,x1:x1+w1]
         orig=cv.cvtColor(orig, cv.COLOR_BGR2RGB)
         img_name = os.path.join('..', 'RezultatiBrazil', f"{name}_tablica.jpg")
         origslika=Image.fromarray(prikaz)
@@ -328,11 +334,13 @@ def tablica(img, name):
 text_file = open("Rezultati.txt", "w")
 #text_file = open("Rezultati.txt", "a")
 metrike = []
-link = "../crkotina/"
-
+link = os.path.join('..', 'benchmarks', 'endtoend', 'eu' )
 
 def endtoend():
     brojac = 0
+    iou=[]
+    tpr=[]
+    fpr=[]
     ukupno = len(os.listdir(link))/2
     print_progress_bar(0, 100, prefix=("\t" + link + "\t"))
     text_file.write("Fajl:\t"+link+"\n\n")
@@ -342,76 +350,70 @@ def endtoend():
     for filename in os.listdir(link):
         if filename.endswith(".txt"):
 
-            f = open(link+"{0}".format(filename), "r")
+            f = open(link+f"{filename}", "r")
             txt = f.read().split('\t')
             fajl = txt[0]
-            img = cv2.imread(link+"{0}".format(fajl))
+            img = cv2.imread(link+f"{fajl}")
             name = fajl.split('.')[0]
             sx = int(txt[1])
             sy = int(txt[2])
-            w = int(txt[3])-int(txt[1])
-            h = int(txt[4])-int(txt[2])
-            ex = sx+w
-            ey = sy+h
+            w = int(txt[3])
+            h = int(txt[4])
             (sx1, sy1, ex1, ey1), granica, text = tablica(img, name)
-
             (avgHue, avgSat, avgVal) = histogrami(img, sx1, sy1, ex1, ey1)
-
+            brojac+=1
             detektovano = Rectangle(sx1, sy1, ex1, ey1)
             baza = Rectangle(sx, sy, ex, ey)
             presek = area(baza, detektovano)
-            unija = (ex1-sx1)*(ey1-sy1)+(ex-sx)*(ey-sy)-presek
-            iou = presek/unija*100
-            #print(iou, name)
+            height, width = img.shape[:2]
+            povrsBaza=(ex-sx)*(ey-sy)
+            povrsDetekt=(ex1-sx1)*(ey1-sy1)
+            povrsSlika=width*height
+            TP = area(baza, detektovano)
+            FN=povrsBaza-TP
+            FP=povrsDetekt-TP
+            TN=povrsSlika-TP-FN-FP
+            TPR=TP/(TP+FN)*100
+            FPR=FP/(FP+TN)*100
+            IOU=TP/(FP+TP+FN)*100
 
-            text_file.write(name+"\t\t"+str(round(iou, 2))+"%\t\t("+str(round(granica, 2))+")\t\t["+text+"]\t\t{"+str(
-                round(avgHue, 1))+"\t:\t"+str(round(avgSat, 1))+"\t:\t"+str(round(avgVal, 1))+"}\n")
+            iou.append(IOU)
+            tpr.append(TPR)
+            fpr.append(FPR)
+
+            text_file.write(name+"\t"+str(round(IOU, 5))+"\t"+str(round(TPR, 5))+"\t" +str(round(FPR, 5))+"\t"+str(len(iou))+"\t"+str(round(granica, 2))+"\t"+str(round(avgSat, 1))+"\n")
             text_file.flush()
 
-            metrike.append(iou)
-            currmetrika = round(sum(metrike)/len(metrike), 1)
-            brojac += 1
             dosad = time.time()-start
-            prosecnovreme = dosad/brojac
+            prosecnovreme = dosad/len(iou)
             preostalovreme = (ukupno-brojac) * prosecnovreme
             if preostalovreme >= 60:
                 preostalovreme = str(round(preostalovreme/60, 1)) +" min"
             else:
                 preostalovreme = str(round(preostalovreme, 1))+" s"
             print_progress_bar(brojac, ukupno, prefix=(
-                    "\t"+link+"\t"), suffix=("\t"+str(currmetrika)+"%\t"+preostalovreme+"\t\t"))
-
-
-"""def grci():
-    for filename in os.listdir('Slike'):
-        img = cv2.imread(filename)
-"""
-
+                    "\t"+link+"\t"), suffix=("\t"+preostalovreme))
+            return(iou,tpr,fpr)
 
 start = time.time()
-endtoend()
+iou,tpr,fpr=endtoend()
 vreme = time.time()-start
 
+_iou=sum(iou)/len(iou)
+_tpr=sum(tpr)/len(tpr)
+_fpr=sum(fpr)/len(fpr)
+
 text_file.write("\n")
-metrika = sum(metrike)/len(metrike)
 brojac = 0
 suma = 0
-prosecnovreme = vreme/len(metrike)
-for i in range(0, len(metrike)):
-    if metrike[i] > 60:
-        suma += metrike[i]
-        brojac += 1
-if brojac != 0:
-    m1 = suma/brojac
+prosecnovreme = vreme/len(iou)
 
+plt.figure()
 plt.hist(metrike, bins='auto')
 plt.savefig('Rezultati_histogram.jpg')
 
-print("\t\r Ukupno: "+str(round(metrika, 2))+" % \r")
-
 text_file.write("Ukupno: "+str(round(metrika, 2)) +
                 " % ("+str(len(metrike))+")\n")
-text_file.write("Vece od 50%: "+str(round(m1, 2))+" % ("+str(brojac)+") ["+str(round(procent, 1)) +" %]\n")
 text_file.write("Prosecno vreme po slici: "+str(round(prosecnovreme, 2)
                                                 )+" s ("+str(round(vreme/60, 2))+" min)\n\n")
 text_file.close()
