@@ -312,7 +312,7 @@ def Program(granica, iteracija):
     plt.hist(iou, bins='auto')
     plt.savefig('../Rezultati/Rezultati_histogram'+str(iteracija)+'.jpg')
     text_file.write("Granica: "+str(round(granica, 2))+"\n")
-    text_file.write("IOU: "+str(round(_iou, 2))+"% TPR: "+str(round(_tpr, 2))+"%"+ " FPR:" +str(round(_fpr, 2))+" % ("+str(len(iou))+")\n")
+    text_file.write("IOU: "+str(round(_iou, 5))+"% TPR: "+str(round(_tpr, 5))+"%"+ " FPR:" +str(round(_fpr, 5))+" % ("+str(len(iou))+")\n")
     text_file.write("Prosecno vreme po slici: "+str(round(prosecnovreme, 2))+" s ("+str(round(vreme/60, 2))+" min)\n\n")
     text_file.flush()
     return(_iou,_fpr,_tpr)
@@ -325,13 +325,13 @@ iou=[]
 fpr=[]
 tpr=[]
 
-prvi=1
-poslednji=20
+prvi=0
+poslednji=10
 increment=1
 odnos=poslednji-prvi+1
 
 for i in range(prvi,poslednji+1,increment):
-    IOU,FPR,TPR=Program(i/odnos,i-prvi)
+    IOU,FPR,TPR=Program(i/10,i)
     iou.append(int(IOU))
     fpr.append(int(FPR))
     tpr.append(int(TPR))
