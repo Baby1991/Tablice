@@ -1,35 +1,58 @@
 import cv2 as cv
 import cv2
 import matplotlib.pyplot as plt
-import pytesseract
 import numpy as np
 import text_detection
 from PIL import Image
 import time
-
 import os
-
 from collections import namedtuple
+
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
-#text_file = open("Output.txt", "w")
+
+CRTAJ = False
 
 
-def area(a, b):
-    cetiritacke = [[a.xmin, a.ymin], [a.xmax, a.ymax],
-                   [b.xmin, b.ymin], [b.xmax, b.ymax]]
-    x21 = cetiritacke[2][0]
-    y21 = cetiritacke[2][1]
-    x22 = cetiritacke[3][0]
-    y22 = cetiritacke[3][1]
+def area(a: namedtuple, b: namedtuple) -> int:
+    """
+    Funkcija koja racuna povrsinu preseka dva pravougaonika
+    :param a:
+    :param b:
+    :return:
+    """
+    cetiri_tacke = [
+        [a.xmin, a.ymin],
+        [a.xmax, a.ymax],
+        [b.xmin, b.ymin],
+        [b.xmax, b.ymax]
+    ]
+    x21 = cetiri_tacke[2][0]
+    y21 = cetiri_tacke[2][1]
+    x22 = cetiri_tacke[3][0]
+    y22 = cetiri_tacke[3][1]
 
-    x11 = cetiritacke[0][0]
-    y11 = cetiritacke[0][1]
-    x12 = cetiritacke[1][0]
-    y12 = cetiritacke[1][1]
+    x11 = cetiri_tacke[0][0]
+    y11 = cetiri_tacke[0][1]
+    x12 = cetiri_tacke[1][0]
+    y12 = cetiri_tacke[1][1]
 
-    if ((x21 > x11 and x21 > x12) and (x22 > x11 and x22 > x12)) or ((x21 < x11 and x21 < x12) and (x22 < x11 and x22 < x12)):
+    # Provera postojanja preseka pravougaonika
+    if (
+            (x21 > x11 and x21 > x12) and
+            (x22 > x11 and x22 > x12)
+    ) or (
+            (x21 < x11 and x21 < x12) and
+            (x22 < x11 and x22 < x12)
+    ):
         return 0
-    if ((y21 > y11 and y21 > y12) and (y22 > y11 and y22 > y12)) or ((y21 < y11 and y21 < y12) and (y22 < y11 and y22 < y12)):
+
+    if (
+            (y21 > y11 and y21 > y12) and
+            (y22 > y11 and y22 > y12)
+    ) or (
+            (y21 < y11 and y21 < y12) and
+            (y22 < y11 and y22 < y12)
+    ):
         return 0
 
     arry = [y11, y12, y21, y22]
@@ -39,7 +62,7 @@ def area(a, b):
     return (arrx[2] - arrx[1]) * (arry[2] - arry[1])
 
 
-def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█'):
+def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█'):
     percent = ("{0:." + str(decimals) + "f}").format(100 *
                                                      (iteration / float(total)))
     filledLength = int(length * iteration // total)
@@ -49,8 +72,14 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
         print('\n')
 
 
-def merge(textbox1, textbox2):
-    textbox3 = []
+def merge(textbox1: list, textbox2: list) -> tuple:
+    """
+
+    :param textbox1:
+    :param textbox2:
+    :return:
+    """
+    textbox3: list = []
     if textbox1[0] < textbox2[0]:
         textbox3.append(textbox1[0])
         textbox3.append(textbox1[1])
@@ -66,43 +95,56 @@ def merge(textbox1, textbox2):
 
 
 def histogrami(img, sx, sy, ex, ey):
+    """
+
+    :param img:
+    :param sx:
+    :param sy:
+    :param ex:
+    :param ey:
+    :return:
+    """
     img = img[sy:ey, sx:ex]
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     hue, saturation, value = cv2.split(hsv)
 
-    avgHue = np.average(hue)/255*360
-    avgSat = np.average(saturation)/255*100
-    avgVal = np.average(value)/255*100
+    avg_hue = np.average(hue)/255*360
+    avg_sat = np.average(saturation)/255*100
+    avg_val = np.average(value)/255*100
 
-    hue = hue.flatten()/255*360
-    saturation = saturation.flatten()/255*100
-    value = value.flatten()/255*100
-
-    return(avgHue, avgSat, avgVal)
+    return avg_hue, avg_sat, avg_val
 
 
-def tablica(img,name):
-    pomocna = 1
-    orig=img.copy()
+def tablica(img, name):
+    """
+
+    :param img:
+    :param name:
+    :return:
+    """
+    # Flag za proveru postojanja preseka
+    flag_presek = 1
+    orig = img.copy()
     kopija = orig.copy()
-    #text_file.write(str(broj)+"\n") 
-
-    img = orig.copy()
     prikaz = orig.copy()
     textboxes = []
+    # Granica sigurnosti OCR
     granica = 1
     while len(textboxes) < 1:
         textboxes = text_detection.text_detection(img, granica)
-        '''for txt in textboxes:
-            if abs(txt[0] - txt[2]) > 500 or abs(txt[1] - txt[3]) > 300 or abs(txt[0] - txt[2]) / abs(txt[1] - txt[3]) < 1.5:
-                textboxes.remove(txt)'''
         granica -= 0.05
     if len(textboxes) > 1:
         i = 0
         while i < len(textboxes):
             j = i + 1
             while j < len(textboxes):
-                if (abs(textboxes[i][2] - textboxes[j][0]) < 40 or abs(textboxes[i][0] - textboxes[j][2]) < 40) or (abs(textboxes[i][3] - textboxes[j][1]) < 10 or abs(textboxes[i][1] - textboxes[j][3]) < 10):
+                if (
+                        abs(textboxes[i][2] - textboxes[j][0]) < 40 or
+                        abs(textboxes[i][0] - textboxes[j][2]) < 40
+                ) or (
+                        abs(textboxes[i][3] - textboxes[j][1]) < 10 or
+                        abs(textboxes[i][1] - textboxes[j][3]) < 10
+                ):
                     textboxes.insert(i + 1, merge(textboxes[i], textboxes[j]))
                     textboxes.pop(i + 1)
                     textboxes.pop(j)
@@ -114,16 +156,17 @@ def tablica(img,name):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     hue, saturation, value = cv2.split(hsv)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    topHat = cv2.morphologyEx(value, cv2.MORPH_TOPHAT, kernel)
-    blackHat = cv2.morphologyEx(value, cv2.MORPH_BLACKHAT, kernel)
-    add = cv2.add(value, topHat)
-    subtract = cv2.subtract(add, blackHat)
+    top_hat = cv2.morphologyEx(value, cv2.MORPH_TOPHAT, kernel)
+    black_hat = cv2.morphologyEx(value, cv2.MORPH_BLACKHAT, kernel)
+    add = cv2.add(value, top_hat)
+    subtract = cv2.subtract(add, black_hat)
     blur = cv2.GaussianBlur(subtract, (5, 5), 0)
 
     thresh = cv2.adaptiveThreshold(
-        blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9)
+        blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 19, 9
+    )
 
-    CannyThresh = cv2.Canny(thresh, 0, 200, 10)
+    canny_thresh = cv2.Canny(thresh, 0, 200, 10)
 
     """
     gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -149,8 +192,8 @@ def tablica(img,name):
     img1 = cv2.dilate(img1, (3,3),10)
     """
     (contours, __) = cv.findContours(
-        CannyThresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-    (x1, y1, w1, h1) = (0, 0, 0, 0)
+        canny_thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE
+    )
 
     height, width = img.shape[:2]
     blank_image = np.zeros((height, width, 3), np.uint8)
@@ -158,15 +201,18 @@ def tablica(img,name):
     cv2.drawContours(blank_image, contours, -1, (255, 255, 255), 1)
     blank_image = cv2.cvtColor(blank_image, cv2.COLOR_GRAY2RGB)
     blanksave = Image.fromarray(blank_image)
-    blanksave.save("../RezultatiBrazil/{0}_ivice.jpg".format(name))
+    img_name = os.path.join('..', 'RezultatiBrazil', f"{name}_ivice.jpg")
+    blanksave.save(img_name)
 
-    dobrekonture = []
-    mogucetablice = []
+    dobre_konture = []
+    moguce_tablice = []
 
     cv.drawContours(prikaz, contours, -1, (0, 0, 255), 1)
 
-    for (sx, sy, ex, ey) in textboxes:
-        cv.rectangle(prikaz, (sx, sy), (ex, ey), (255, 255, 0), 2)
+    for (start_x, start_y, end_x, end_y) in textboxes:
+        cv.rectangle(
+            prikaz, (start_x, start_y), (end_x, end_y), (255, 255, 0), 2
+        )
 
     for contour in contours:
         (x, y, w, h) = cv2.boundingRect(contour)
@@ -176,72 +222,55 @@ def tablica(img,name):
         alpha = 0.7
         prikaz = cv2.addWeighted(overlay, alpha, prikaz, 1 - alpha, 0)
 
-        #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
         if 1.5 <= (w/h) <= 10 and 1000 > w > 100 and 1000 > h > 5:
-            # tester=orig[y:y+h,x:x+w]
-            #tester=cv.cvtColor(tester, cv.COLOR_BGR2GRAY)
-            # (meanbright1,__,__,__)=cv.mean(tester)
-            #cv2.rectangle(prikaz, (x,y), (x+w,y+h), (0,255,0), 2)
-
             cv2.rectangle(prikaz, (x, y), (x+w, y+h), (255, 0, 0), 2)
-            dobrekonture.append(contour)
+            dobre_konture.append(contour)
 
     font = cv2.FONT_HERSHEY_SIMPLEX
         
     skorovi = []
-        
-    for contour in dobrekonture:
-        A=0
-        score=0
-        (x,y,w,h) = cv2.boundingRect(contour)
-        bound=Rectangle(x,y,x+w,y+h)
-        boundarea=w*h
-        
-        
-        
-        for (sx,sy,ex,ey) in textboxes:
-            r=Rectangle(sx,sy,ex,ey)
+
+    for contour in dobre_konture:
+        A = 0
+        score = 0
+        (x, y, w, h) = cv2.boundingRect(contour)
+        bound = Rectangle(x, y, x+w, y+h)
+        boundarea = w * h
+
+        for (start_x, start_y, end_x, end_y) in textboxes:
+            r = Rectangle(start_x, start_y, end_x, end_y)
             
-            if area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 100 > A:
-                A = area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 70
-               
-        score=A
+            if area(r, bound)/boundarea*100 + area(r, bound)/((end_x-start_x)*(end_y-start_y)) * 100 > A:
+                A = area(r,bound)/boundarea*100 + area(r, bound)/((end_x-start_x)*(end_y-start_y)) * 70
+
+        score = A
         skorovi.append(score)
-        
+
         cv2.putText(prikaz,str(round(score,0)),(x,y), font, 0.4,(0,0,0),2,cv2.LINE_AA,)
         
-        mogucetablice.append((score,contour))
+        moguce_tablice.append((score,contour))
                 
         
         
-    prikazslika=Image.fromarray(prikaz)
-    prikazslika.save("../RezultatiBrazil/{0}_detekcija.jpg".format(name))
+    prikaz_slika=Image.fromarray(prikaz)
+    prikaz_slika.save("../RezultatiBrazil/{0}_detekcija.jpg".format(name))
     skorovi = []
-    w1 = 0
-    h1 = 0
-    if len(mogucetablice) > 0:
-        maxscore, tablica = mogucetablice[0]
-        for (score, contour) in mogucetablice:
+
+    if len(moguce_tablice) > 0:
+        maxscore, tablica = moguce_tablice[0]
+        for (score, contour) in moguce_tablice:
             (x, y, w, h) = cv2.boundingRect(contour)
             skorovi.append(score)
             if(score > maxscore):
                 maxscore, tablica = score, contour
-                w1 = w
-                h1 = h
-    
-    #if h != 0 and h1 != 0:
-     #   for (score, contour) in mogucetablice:
-      #      (x, y, w, h) = cv2.boundingRect(contour)
-       #     if score != 0 and maxscore - score < maxscore / 4 and w / h < 6 and w / h > w1 / h1:
-        #        maxscore, tablica = score, contour
-        
+
         minsat = 500
         pozicija = 0
         pozicija2 = 0
         if maxscore == 0:
-            pomocna = 0
+            flag_presek = 0
             i = 0
-            for crkotina in mogucetablice:
+            for crkotina in moguce_tablice:
                 (x,y,w,h) = cv2.boundingRect(crkotina[1])
                 pg=Rectangle(x,y,x+w,y+h)
                 (_, sat, _) = histogrami(kopija, pg[0], pg[1], pg[2], pg[3])
@@ -249,7 +278,7 @@ def tablica(img,name):
                     minsat = sat
                     pozicija = i
                 i+=1
-            (minsat, tablica) = mogucetablice[pozicija]
+            (minsat, tablica) = moguce_tablice[pozicija]
             
             minsat = 500
             k = 0
@@ -263,7 +292,7 @@ def tablica(img,name):
     
     orig = cv.cvtColor(orig, cv.COLOR_BGR2RGB)
 
-    if pomocna == 0:
+    if flag_presek == 0:
         (x1,y1,w1,h1) = cv2.boundingRect(tablica)
         (_, sat1, _) = histogrami(img, x1, y1, x1 + w1, y1 + h1)
         (_, sat2, _) = histogrami(img, textboxes[pozicija2][0], textboxes[pozicija2][1], textboxes[pozicija2][2], textboxes[pozicija2][3])
@@ -277,7 +306,7 @@ def tablica(img,name):
     #plt.imshow(orig)
     #try:
     if False:
-        if pomocna == 0:
+        if flag_presek == 0:
             (x1,y1,w1,h1) = cv2.boundingRect(tablica)
             (_, sat1, _) = histogrami(kopija, x1, y1, x1 + w1, y1 + h1)
             (_, sat2, _) = histogrami(kopija, textboxes[pozicija2][0], textboxes[pozicija2][1], textboxes[pozicija2][2], textboxes[pozicija2][3])
@@ -322,7 +351,7 @@ link = "../crkotina/"
 def endtoend():
     brojac = 0
     ukupno = len(os.listdir(link))/2
-    printProgressBar(0, 100, prefix=("\t"+link+"\t"))
+    print_progress_bar(0, 100, prefix=("\t" + link + "\t"))
     text_file.write("Fajl:\t"+link+"\n\n")
     text_file.write(
         "Ime\t\tIoU\t\tGranica\t\tText\t\t{Hue\t:\tSat\t:\tVal}\n")
@@ -366,7 +395,7 @@ def endtoend():
                 preostalovreme = str(round(preostalovreme/60, 1)) +" min"
             else:
                 preostalovreme = str(round(preostalovreme, 1))+" s"
-            printProgressBar(brojac, ukupno, prefix=(
+            print_progress_bar(brojac, ukupno, prefix=(
                     "\t"+link+"\t"), suffix=("\t"+str(currmetrika)+"%\t"+preostalovreme+"\t\t"))
 
 
