@@ -409,10 +409,10 @@ text_file.write(link+'\n')
 text_file.flush()
 
 first=0
-last=10
+last=20
 
 for iteracija in range(first,last+1,1):
-    granica=1/(last-first)*iteracija
+    granica=round(1/(last-first)*iteracija,2)
     start = time.time()
     iou, tpr, fpr = endtoend(iteracija,granica)
     vreme = time.time()-start
@@ -432,15 +432,20 @@ for iteracija in range(first,last+1,1):
     plt.savefig(os.path.join('..', 'Rezultati', f'Rezultati_{iteracija}_histogram.jpg'))
 
     text_file.write(str(round(_iou, 2))+"\t"+str(round(_tpr, 2))+"\t" + str(round(
-        _fpr, 2))+"\t"+str(len(iou))+"\t\n")
+        _fpr, 2))+"\t"+str(len(granica))+"\t"+str(iou)+"\t\n")
     text_file.write("Prosecno vreme po slici: "+str(round(prosecnovreme, 2)
-                                                    )+" s ("+str(round(vreme/60, 2))+" min)\n\n")
+                                                    )+" s ("+str(round(vreme/60, 2))+" min)\n")
     text_file.flush()
 
 _IOU=sum(IOU)/len(IOU)
-text_file.write("\n",str(round(_IOU,2)))
+text_file.write("\n"+str(round(_IOU,2)))
 text_file.close()
-
+plt.figure()
+plt.scatter(range(0,len(TPR)),TPR)
+plt.savefig(os.path.join('..', 'Rezultati', 'TPR.jpg'))
+plt.figure()
+plt.scatter(range(0,len(FPR)),FPR)
+plt.savefig(os.path.join('..', 'Rezultati', 'FPR.jpg'))
 plt.figure()
 plt.scatter(FPR,TPR)
 plt.savefig(os.path.join('..', 'Rezultati', 'ROC.jpg'))
