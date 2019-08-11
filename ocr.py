@@ -84,7 +84,6 @@ def histogrami(img, sx, sy, ex, ey):
 def tablica(img,name, granica):
     pomocna = 1
     orig=img.copy()
-    kopija = orig.copy()
 
     img = orig.copy()
     prikaz = orig.copy()
@@ -92,18 +91,6 @@ def tablica(img,name, granica):
     
     textboxes = text_detection.text_detection(img, granica)
        
-    if len(textboxes) > 1:
-        i = 0
-        while i < len(textboxes):
-            j = i + 1
-            while j < len(textboxes):
-                if (abs(textboxes[i][2] - textboxes[j][0]) < 20 or abs(textboxes[i][0] - textboxes[j][2]) < 20) or (abs(textboxes[i][3] - textboxes[j][1]) < 10 or abs(textboxes[i][1] - textboxes[j][3]) < 10):
-                    textboxes.insert(i + 1, merge(textboxes[i], textboxes[j]))
-                    textboxes.pop(i + 1)
-                    textboxes.pop(j)
-                j += 1
-            i += 1
-
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     hue, saturation, value = cv2.split(hsv)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
@@ -171,9 +158,7 @@ def tablica(img,name, granica):
         
         for (sx,sy,ex,ey) in textboxes:
             r=Rectangle(sx,sy,ex,ey)
-            
-            if area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 70 > A:
-                A = area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 70
+            A += area(r,bound)/boundarea*100 + area(r,bound)/((ex-sx)*(ey-sy)) * 70
                
         score=A
         skorovi.append(score)
@@ -188,56 +173,23 @@ def tablica(img,name, granica):
         for (score, contour) in mogucetablice:
             (x, y, w, h) = cv2.boundingRect(contour)
 
-            if(score > maxscore):
+            if(score>maxscore):
                 maxscore, tablica = score, contour
 
-            if(score>maxscore):
-                maxscore,tablica=score,contour
         
-        minsat = 500
-        pozicija = 0
-        pozicija2 = 0
-        if maxscore == 0:
-            pomocna = 0
-            i = 0
-            for crkotina in mogucetablice:
-                (x,y,w,h) = cv2.boundingRect(crkotina[1])
-                pg=Rectangle(x,y,x+w,y+h)
-                (_, sat, _) = histogrami(kopija, pg[0], pg[1], pg[2], pg[3])
-                if sat < minsat:
-                    minsat = sat
-                    pozicija = i
-                i+=1
-            (minsat, tablica) = mogucetablice[pozicija]
-            
-            minsat = 500
-            k = 0
-            for txt in textboxes:
-                (_, sat, _) = histogrami(kopija, txt[0], txt[1], txt[2], txt[3])
-                if sat < minsat:
-                    minsat = sat
-                    pozicija2 = k
-                k+=1
+        
                 
     
     orig = cv.cvtColor(orig, cv.COLOR_BGR2RGB)
 
-    if pomocna == 0 and len(textboxes)>0:
-        (x1,y1,w1,h1) = cv2.boundingRect(tablica)
-        (_, sat1, _) = histogrami(img, x1, y1, x1 + w1, y1 + h1)
-        (_, sat2, _) = histogrami(img, textboxes[pozicija2][0], textboxes[pozicija2][1], textboxes[pozicija2][2], textboxes[pozicija2][3])
-        if sat1 < sat2:
-            orig=orig[y1:y1+h1,x1:x1+w1]
-        else:
-            orig=orig[textboxes[pozicija2][1]:textboxes[pozicija2][3],textboxes[pozicija2][0]:textboxes[pozicija2][2]]
-    else:
-        (x1,y1,w1,h1) = cv2.boundingRect(tablica)
-        orig=orig[y1:y1+h1,x1:x1+w1]
+    
+    (x1,y1,w1,h1) = cv2.boundingRect(tablica)
+    orig=orig[y1:y1+h1,x1:x1+w1]
 
     #text=pytesseract.image_to_string(orig)
     text=""
 
-    return((x1, y1, x1+w1, y1+h1), granica, text)
+    return((x1, y1, x1+w1, y1+h1))
 
 def endtoend(granica,iteracija,start):
     brojac = 0
@@ -263,7 +215,7 @@ def endtoend(granica,iteracija,start):
             h = int(txt[4])
             ex = sx+w
             ey = sy+h
-            (sx1, sy1, ex1, ey1), _, text = tablica(img, name, granica)
+            (sx1, sy1, ex1, ey1)= tablica(img, name, granica)
 
             (avgHue, avgSat, avgVal) = histogrami(img, sx1, sy1, ex1, ey1)
 
@@ -327,7 +279,7 @@ tpr=[]
 
 prvi=0
 poslednji=10
-increment=1
+increment=2
 odnos=poslednji-prvi+1
 
 for i in range(prvi,poslednji+1,increment):
