@@ -126,7 +126,10 @@ def tablica(img, name):
     flag_presek = 1
     orig = img.copy()
     kopija = orig.copy()
-    prikaz = orig.copy()
+
+    if CRTAJ:
+        prikaz = orig.copy()
+
     textboxes = []
     # Granica sigurnosti OCR
     granica = 1
@@ -194,41 +197,44 @@ def tablica(img, name):
     (contours, __) = cv.findContours(
         canny_thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE
     )
-
-    height, width = img.shape[:2]
-    blank_image = np.zeros((height, width, 3), np.uint8)
-    blank_image = cv2.cvtColor(blank_image, cv2.COLOR_BGR2GRAY)
-    cv2.drawContours(blank_image, contours, -1, (255, 255, 255), 1)
-    blank_image = cv2.cvtColor(blank_image, cv2.COLOR_GRAY2RGB)
-    blanksave = Image.fromarray(blank_image)
-    img_name = os.path.join('..', 'RezultatiBrazil', f"{name}_ivice.jpg")
-    blanksave.save(img_name)
+    
+    if CRTAJ:
+        height, width = img.shape[:2]
+        blank_image = np.zeros((height, width, 3), np.uint8)
+        blank_image = cv2.cvtColor(blank_image, cv2.COLOR_BGR2GRAY)
+        cv2.drawContours(blank_image, contours, -1, (255, 255, 255), 1)
+        blank_image = cv2.cvtColor(blank_image, cv2.COLOR_GRAY2RGB)
+        blanksave = Image.fromarray(blank_image)
+        img_name = os.path.join('..', 'RezultatiBrazil', f"{name}_ivice.jpg")
+        blanksave.save(img_name)
 
     dobre_konture = []
     moguce_tablice = []
 
-    cv.drawContours(prikaz, contours, -1, (0, 0, 255), 1)
+    if CRTAJ:
+        cv.drawContours(prikaz, contours, -1, (0, 0, 255), 1)
 
-    for (start_x, start_y, end_x, end_y) in textboxes:
-        cv.rectangle(
-            prikaz, (start_x, start_y), (end_x, end_y), (255, 255, 0), 2
-        )
+        for (start_x, start_y, end_x, end_y) in textboxes:
+            cv.rectangle(
+                prikaz, (start_x, start_y), (end_x, end_y), (255, 255, 0), 2
+            )
 
     for contour in contours:
         (x, y, w, h) = cv2.boundingRect(contour)
-        overlay = prikaz.copy()
-
-        cv2.rectangle(overlay, (x, y), (x+w, y+h), (0, 255, 0), 1)
-        alpha = 0.7
-        prikaz = cv2.addWeighted(overlay, alpha, prikaz, 1 - alpha, 0)
+        
+        if CRTAJ:
+            overlay = prikaz.copy()
+            cv2.rectangle(overlay, (x, y), (x+w, y+h), (0, 255, 0), 1)
+            alpha = 0.7
+            prikaz = cv2.addWeighted(overlay, alpha, prikaz, 1 - alpha, 0)
 
         if 1.5 <= (w/h) <= 10 and 1000 > w > 100 and 1000 > h > 5:
-            cv2.rectangle(prikaz, (x, y), (x+w, y+h), (255, 0, 0), 2)
+            if CRTAJ: cv2.rectangle(prikaz, (x, y), (x+w, y+h), (255, 0, 0), 2)
             dobre_konture.append(contour)
 
     font = cv2.FONT_HERSHEY_SIMPLEX
         
-    skorovi = []
+    #skorovi = []
 
     for contour in dobre_konture:
         A = 0
@@ -239,22 +245,23 @@ def tablica(img, name):
 
         for (start_x, start_y, end_x, end_y) in textboxes:
             r = Rectangle(start_x, start_y, end_x, end_y)
+            prekrivena_povrs_texta=area(r, bound)/((end_x-start_x)*(end_y-start_y))
+            prekrivena_povrs_konture=area(r, bound)/boundarea
+            A=max(A,prekrivena_povrs_konture*100 +  prekrivena_povrs_texta* 100)
             
-            if area(r, bound)/boundarea*100 + area(r, bound)/((end_x-start_x)*(end_y-start_y)) * 100 > A:
-                A = area(r,bound)/boundarea*100 + area(r, bound)/((end_x-start_x)*(end_y-start_y)) * 70
+            #if area(r, bound)/boundarea*100 + area(r, bound)/((end_x-start_x)*(end_y-start_y)) * 100 > A:
+            #    A = area(r,bound)/boundarea*100 + area(r, bound)/((end_x-start_x)*(end_y-start_y)) * 70
 
-        score = A
-        skorovi.append(score)
-
-        cv2.putText(prikaz,str(round(score,0)),(x,y), font, 0.4,(0,0,0),2,cv2.LINE_AA,)
+        #skorovi.append(A)
+        moguce_tablice.append((A,contour))
+      
+        if CRTAJ:
+            cv2.putText(prikaz,str(round(score,0)),(x,y), font, 0.4,(0,0,0),2,cv2.LINE_AA)
+            img_name = os.path.join('..', 'RezultatiBrazil', f"{name}_detekcija.jpg")
+            prikaz_slika=Image.fromarray(prikaz)
+            prikaz_slika.save(img_name)    
         
-        moguce_tablice.append((score,contour))
-                
-        
-        
-    prikaz_slika=Image.fromarray(prikaz)
-    prikaz_slika.save("../RezultatiBrazil/{0}_detekcija.jpg".format(name))
-    skorovi = []
+        skorovi = []
 
     if len(moguce_tablice) > 0:
         maxscore, tablica = moguce_tablice[0]
@@ -289,8 +296,8 @@ def tablica(img, name):
                     pozicija2 = k
                 k+=1
                 
-    
-    orig = cv.cvtColor(orig, cv.COLOR_BGR2RGB)
+    if CRTAJ:
+        orig = cv.cvtColor(orig, cv.COLOR_BGR2RGB)
 
     if flag_presek == 0:
         (x1,y1,w1,h1) = cv2.boundingRect(tablica)
@@ -303,41 +310,17 @@ def tablica(img, name):
     else:
         (x1,y1,w1,h1) = cv2.boundingRect(tablica)
         orig=orig[y1:y1+h1,x1:x1+w1]
-    #plt.imshow(orig)
-    #try:
-    if False:
-        if flag_presek == 0:
-            (x1,y1,w1,h1) = cv2.boundingRect(tablica)
-            (_, sat1, _) = histogrami(kopija, x1, y1, x1 + w1, y1 + h1)
-            (_, sat2, _) = histogrami(kopija, textboxes[pozicija2][0], textboxes[pozicija2][1], textboxes[pozicija2][2], textboxes[pozicija2][3])
-            if sat1 < sat2:
-                orig=orig[y1:y1+h1,x1:x1+w1]
-            else:
-                orig=orig[textboxes[pozicija2][1]:textboxes[pozicija2][3],textboxes[pozicija2][0]:textboxes[pozicija2][2]]
-        '''
-        else:
-            (x1,y1,w1,h1) = cv2.boundingRect(tablica)
-            orig=orig[y1:y1+h1,x1:x1+w1]'''
-        #raise
-    #except:
-    #    cv2.putText(orig,"OVO JE LOS PROGRAM!!!!",(10,300), font, 2,(255,0,0),10,cv2.LINE_AA)
     
-    #text=pytesseract.image_to_string(orig)
-    text=""
-    #print("Pytesseract: ", text)
-    """
-    plt.figure()
-    plt.imshow(prikaz)
-    plt.figure()
-    plt.imshow(orig)
-    plt.show()
-    """
-    #text_file.write(text+"\n") 
-    #plt.imshow(orig)
-    #plt.show()
-    orig=cv.cvtColor(orig, cv.COLOR_BGR2RGB)
-    origslika=Image.fromarray(orig)
-    origslika.save("../RezultatiBrazil/{0}_tablica.jpg".format(name))
+    if CRTAJ:
+        text=pytesseract.image_to_string(orig)
+    else:
+        text="" 
+    
+    if CRTAJ:
+        orig=cv.cvtColor(orig, cv.COLOR_BGR2RGB)
+        img_name = os.path.join('..', 'RezultatiBrazil', f"{name}_tablica.jpg")
+        origslika=Image.fromarray(prikaz)
+        origslika.save(img_name) 
 
     return((x1, y1, x1+w1, y1+h1), granica, text)
 
