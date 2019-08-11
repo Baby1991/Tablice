@@ -263,7 +263,7 @@ def endtoend(granica,iteracija,start):
             h = int(txt[4])
             ex = sx+w
             ey = sy+h
-            (sx1, sy1, ex1, ey1), granica, text = tablica(img, name, granica)
+            (sx1, sy1, ex1, ey1), _, text = tablica(img, name, granica)
 
             (avgHue, avgSat, avgVal) = histogrami(img, sx1, sy1, ex1, ey1)
 
@@ -308,7 +308,7 @@ def Program(granica, iteracija):
     
     prosecnovreme = vreme/len(iou)
 
-
+    plt.figure()
     plt.hist(iou, bins='auto')
     plt.savefig('../Rezultati/Rezultati_histogram'+str(iteracija)+'.jpg')
     text_file.write("Granica: "+str(round(granica, 2))+"\n")
@@ -325,13 +325,18 @@ iou=[]
 fpr=[]
 tpr=[]
 
-for i in range(1,20,1):
-    IOU,FPR,TPR=Program(i/20,i-1)
+prvi=1
+poslednji=20
+increment=1
+odnos=poslednji-prvi+1
+
+for i in range(prvi,poslednji+1,increment):
+    IOU,FPR,TPR=Program(i/odnos,i-prvi)
     iou.append(int(IOU))
     fpr.append(int(FPR))
     tpr.append(int(TPR))
 
 text_file.close()
-
+plt.figure()
 plt.scatter(fpr,tpr)
 plt.savefig('../Rezultati/ROC.jpg')
