@@ -30,25 +30,27 @@ def obrada_blackhat(img):
     canny_thresh = cv2.Canny(thresh, 0, 200, 10)
     return(canny_thresh)
 
+
 def obrada_canny_overlap(img):
-    gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    gauss=cv2.GaussianBlur(img,(5,5),0)
-    gaussgray=cv2.GaussianBlur(gray,(5,5),0)
-    gaussCanny=cv2.Canny(gauss,100,200,10)
-    gaussCannygray=cv2.Canny(gaussgray,0,200,10)
-    overlap=cv2.bitwise_and(gaussCanny,gaussCannygray)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gauss = cv2.GaussianBlur(img, (5, 5), 0)
+    gaussgray = cv2.GaussianBlur(gray, (5, 5), 0)
+    gaussCanny = cv2.Canny(gauss, 100, 200, 10)
+    gaussCannygray = cv2.Canny(gaussgray, 0, 200, 10)
+    overlap = cv2.bitwise_and(gaussCanny, gaussCannygray)
     return(overlap)
+
 
 def obrada_canny_stari(img):
     img = cv.normalize(img, img, 0, 255, cv.NORM_MINMAX)
     img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    meanbright,_,_,_=cv.mean(img)
-    img=cv.blur(img,(5,5))
+    meanbright, _, _, _ = cv.mean(img)
+    img = cv.blur(img, (5, 5))
     thres1, img1 = cv2.threshold(img, meanbright, 255, 0)
-    img1=cv.Canny(img,100,200,10)
-    img1 = cv2.dilate(img1, (3,3),1)
-    img1 = cv2.erode(img1, (3,3),1)
-    img1 = cv2.dilate(img1, (3,3),10)
+    img1 = cv.Canny(img, 100, 200, 10)
+    img1 = cv2.dilate(img1, (3, 3), 1)
+    img1 = cv2.erode(img1, (3, 3), 1)
+    img1 = cv2.dilate(img1, (3, 3), 10)
     return(img1)
 
 
@@ -194,9 +196,8 @@ def tablica(img: Image, name):
                 j += 1
             i += 1
 
-            
-    #ALGORITMI OBRADE
-    processing_out=obrada_blackhat(img):
+    # ALGORITMI OBRADE
+    processing_out = obrada_blackhat(img):
 
     (contours, __) = cv.findContours(
         processing_out, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE
@@ -211,17 +212,14 @@ def tablica(img: Image, name):
         blanksave = Image.fromarray(blank_image)
         img_name = os.path.join('..', 'RezultatiBrazil', f"{name}_ivice.jpg")
         blanksave.save(img_name)
-
-    dobre_konture = []
-    moguce_tablice = []
-
-    if CRTAJ:
         cv.drawContours(prikaz, contours, -1, (0, 0, 255), 1)
-
         for (start_x, start_y, end_x, end_y) in textboxes:
             cv.rectangle(
                 prikaz, (start_x, start_y), (end_x, end_y), (255, 255, 0), 2
             )
+
+    dobre_konture = []
+    moguce_tablice = []
 
     for contour in contours:
         (x, y, w, h) = cv2.boundingRect(contour)
@@ -239,8 +237,6 @@ def tablica(img: Image, name):
 
     font = cv2.FONT_HERSHEY_SIMPLEX
 
-    #skorovi = []
-
     for contour in dobre_konture:
         A = 0
         score = 0
@@ -256,10 +252,6 @@ def tablica(img: Image, name):
             A = max(A, prekrivena_povrs_konture *
                     100 + prekrivena_povrs_texta * 100)
 
-            # if area(r, bound)/boundarea*100 + area(r, bound)/((end_x-start_x)*(end_y-start_y)) * 100 > A:
-            #    A = area(r,bound)/boundarea*100 + area(r, bound)/((end_x-start_x)*(end_y-start_y)) * 70
-
-        # skorovi.append(A)
         moguce_tablice.append((A, contour))
 
         if CRTAJ:
@@ -270,13 +262,10 @@ def tablica(img: Image, name):
             prikaz_slika = Image.fromarray(prikaz)
             prikaz_slika.save(img_name)
 
-        skorovi = []
-
     if len(moguce_tablice) > 0:
         maxscore, tablica = moguce_tablice[0]
         for (score, contour) in moguce_tablice:
             (x, y, w, h) = cv2.boundingRect(contour)
-            skorovi.append(score)
             if(score > maxscore):
                 maxscore, tablica = score, contour
 
@@ -306,24 +295,15 @@ def tablica(img: Image, name):
                     pozicija2 = k
                 k += 1
 
-    if CRTAJ:
-        orig = cv.cvtColor(orig, cv.COLOR_BGR2RGB)
-
     if flag_presek == 0:
         (x1, y1, w1, h1) = cv2.boundingRect(tablica)
         (_, sat1, _) = histogrami(img, x1, y1, x1 + w1, y1 + h1)
         (_, sat2, _) = histogrami(
             img, textboxes[pozicija2][0], textboxes[pozicija2][1], textboxes[pozicija2][2], textboxes[pozicija2][3])
 
-        """
-        if sat1 < sat2:
-            #orig=orig[y1:y1+h1,x1:x1+w1]
-        else:
-            #orig=orig[textboxes[pozicija2][1]:textboxes[pozicija2][3],textboxes[pozicija2][0]:textboxes[pozicija2][2]]    
-        """
-
         if sat2 >= sat1:
             (x1, y1, w1, h1) = tuple(textboxes[pozicija2])
+
     else:
         (x1, y1, w1, h1) = cv2.boundingRect(tablica)
 
@@ -344,7 +324,6 @@ def tablica(img: Image, name):
 
 text_file = open("Rezultati.txt", "w")
 #text_file = open("Rezultati.txt", "a")
-metrike = []
 link = os.path.join('..', 'benchmarks', 'endtoend', 'eu')
 text_file.write(link+'\n')
 
@@ -421,11 +400,11 @@ text_file.write("\n")
 prosecnovreme = vreme/len(iou)
 
 plt.figure()
-plt.hist(metrike, bins='auto')
+plt.hist(iou, bins='auto')
 plt.savefig('Rezultati_histogram.jpg')
 
 text_file.write(str(round(_iou, 2))+"\t"+str(round(_tpr, 2))+"\t" + str(round(
     _fpr, 2))+"\t"+str(len(iou))+"\t\n")
-text_file.write("Prosecno vreme po slici: "+str(round(prosecnovreme, 2)
-                                                )+" s ("+str(round(vreme/60, 2))+" min)\n\n")
+text_file.write(+str(round(prosecnovreme, 2)) +
+                " s ("+str(round(vreme/60, 2))+" min)\n\n")
 text_file.close()

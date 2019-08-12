@@ -54,7 +54,7 @@ def endtoend(iteracija, granica):
     tpr = []
     fpr = []
     ukupno = len(os.listdir(os.path.join(link, '')))/2
-    print_progress_bar(0, 100, prefix=("\t" + os.path.join(link, '') + "\t"))
+    print_progress_bar(0, 100, prefix=("\t"+link+"\t"+str(iteracija)+"\t"), suffix=("\t∞\t"+str(granica)+"\t"))
         
     for filename in os.listdir(os.path.join(link, '')):
         if filename.endswith(".txt"):
@@ -62,7 +62,6 @@ def endtoend(iteracija, granica):
             txt = f.read().split('\t')
             fajl = txt[0]
             img = cv2.imread(os.path.join(link, f"{fajl}"))
-            name = fajl.split('.')[0]
             sx = int(txt[1])
             sy = int(txt[2])
             w = int(txt[3])
@@ -77,15 +76,14 @@ def endtoend(iteracija, granica):
             povrsBaza = (ex-sx)*(ey-sy)
             height, width = img.shape[:2]
             povrsSlika = width*height
-            
-            presek=0
             povrsDetekt=0
             TP=0
             
             for (sx1,sy1,ex1,ey1) in textboxes:
                 detektovano = Rectangle(sx1, sy1, ex1, ey1)
-                povrsDetekt += (ex1-sx1)*(ey1-sy1)
-                TP += area(baza, detektovano)
+
+                povrsDetekt += (ex1-sx1)*(ey1-sy1)#
+                TP += area(baza, detektovano)#
             
             FN = povrsBaza-TP
             FP = povrsDetekt-TP
@@ -116,13 +114,13 @@ text_file = open("Rezultati.txt", "w")
 IOU=[]
 TPR=[]
 FPR=[]
-link = os.path.join('..', 'benchmarks', 'endtoend', 'eu')
-text_file.write(link+'\n')
+link = os.path.join('..', 'benchmarks', 'endtoend', 'fejk')
+text_file.write(link+'\t'+str(len(os.listdir(os.path.join(link, '')))/2)+'\n')
 text_file.flush()
 
-first=1
-last=9
-
+first=0
+last=10
+program_start=time.time()
 for iteracija in range(first,last+1,1):
     granica=round(1/(last-first)*iteracija,2)
     start = time.time()
@@ -143,20 +141,28 @@ for iteracija in range(first,last+1,1):
     #plt.hist(iou, bins='auto')
     #plt.savefig(os.path.join('..', 'Rezultati', f'Rezultati_{iteracija}_histogram.jpg'))
 
-    text_file.write(str(round(_iou, 2))+"\t"+str(round(_tpr, 2))+"\t" + str(round(_fpr, 2))+"\t"+str(len(granica))+"\t"+str(iou)+"\t\n")
+    text_file.write(str(round(_iou, 2))+"\t"+str(round(_tpr, 2))+"\t" + str(round(_fpr, 2))+"\t"+str(len(iou))+"\t"+str(granica)+"\t\n")
     text_file.write("Prosecno vreme po slici: "+str(round(prosecnovreme, 2)
                                                     )+" s ("+str(round(vreme/60, 2))+" min)\n")
     text_file.flush()
 
+program_run_time=time.time()-program_start
+sati=program_run_time/60/60
+minuti=program_run_time/60%60
+sekunde=program_run_time%60
+
 _IOU=sum(IOU)/len(IOU)
-text_file.write("\n"+str(round(_IOU,2)))
+text_file.write("\n"+str(round(_IOU,2))+"%\t"+str(int(sati))+"h\t"+str(int(minuti))+"min\t"+str(int(sekunde))+"s\n")
 text_file.close()
 plt.figure()
 plt.plot(range(0,len(TPR)),TPR)
+plt.x_label(link+"\t TPR")
 plt.savefig(os.path.join('..', 'Rezultati', 'TPR.jpg'))
 plt.figure()
 plt.plot(range(0,len(FPR)),FPR)
+plt.x_label(link+"\t FPR")
 plt.savefig(os.path.join('..', 'Rezultati', 'FPR.jpg'))
 plt.figure()
 plt.plot(FPR,TPR)
+plt.x_label(link+"\t ROC")
 plt.savefig(os.path.join('..', 'Rezultati', 'ROC.jpg'))

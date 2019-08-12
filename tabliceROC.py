@@ -362,11 +362,11 @@ def endtoend(iteracija, granica):
             ex = sx+w
             ey = sy+h
             (sx1, sy1, ex1, ey1), text = tablica(img, name, granica)
-            (avgHue, avgSat, avgVal) = histogrami(img, sx1, sy1, ex1, ey1)
+            #(avgHue, avgSat, avgVal) = histogrami(img, sx1, sy1, ex1, ey1)
             brojac += 1
             detektovano = Rectangle(sx1, sy1, ex1, ey1)
             baza = Rectangle(sx, sy, ex, ey)
-            presek = area(baza, detektovano)
+            #presek = area(baza, detektovano)
             height, width = img.shape[:2]
             povrsBaza = (ex-sx)*(ey-sy)
             povrsDetekt = (ex1-sx1)*(ey1-sy1)
@@ -398,16 +398,16 @@ def endtoend(iteracija, granica):
                 "\t"+link+"\t"+str(iteracija)+"\t"), suffix=("\t"+preostalovreme+"\t"+str(granica)+"\t"))
     return(iou, tpr, fpr)
 
-
+link = os.path.join('..', 'benchmarks', 'endtoend', 'eu')
 text_file = open("Rezultati.txt", "w")
 #text_file = open("Rezultati.txt", "a")
-IOU=[]
-TPR=[]
-FPR=[]
-link = os.path.join('..', 'benchmarks', 'endtoend', 'eu')
+
 text_file.write(link+'\n')
 text_file.flush()
 
+IOU=[]
+TPR=[]
+FPR=[]
 first=0
 last=20
 
