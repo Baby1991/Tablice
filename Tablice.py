@@ -197,7 +197,7 @@ def tablica(img: Image, name):
             i += 1
 
     # ALGORITMI OBRADE
-    processing_out = obrada_blackhat(img):
+    processing_out = obrada_blackhat(img)
 
     (contours, __) = cv.findContours(
         processing_out, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE

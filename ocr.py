@@ -66,6 +66,11 @@ def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, lengt
     #if iteration == total:
     #    print('')
 
+def pripadanje_piksela(x, y, lista):
+    for pravougaonik in lista:
+        if x >= pravougaonik[0] and x <= pravougaonik[2] and y >= pravougaonik[1] and y <= pravougaonik[3]:
+            return 1
+    return 0
 
 def endtoend(iteracija, granica):
     brojac = 0
@@ -86,8 +91,8 @@ def endtoend(iteracija, granica):
             sy = int(txt[2])
             w = int(txt[3])
             h = int(txt[4])
-            ex = sx+w
-            ey = sy+h
+            ex = w
+            ey = h
 
             textboxes = []
             textboxes = text_detection.text_detection(img, granica)
@@ -100,7 +105,7 @@ def endtoend(iteracija, granica):
             povrsDetekt = 0
             TP = 0
 
-            """
+            
             textboxes1=[]
             for (sx1,sy1,ex1,ey1) in textboxes:
             
@@ -117,7 +122,7 @@ def endtoend(iteracija, granica):
                 textboxes1.append((sx1,sy1,ex1,ey1))
             
             textboxes=textboxes1.copy()
-            """   
+            
             # lista preseka zutih pravougaonika
             
             preseci_zutih = []
@@ -130,31 +135,23 @@ def endtoend(iteracija, granica):
                             textboxes[i], textboxes[j]))
             
             #ovo radi
-            preseci_preseka = []
             for pravougaonik in textboxes:
                 povrsDetekt += Povrsina(pravougaonik)
             for presek in preseci_zutih: 
                 povrsDetekt -= Povrsina(presek)
             
-            for pravougaonik in textboxes:
-                presek = area(baza, pravougaonik)
-                if presek != 0:
-                    preseci_preseka.append(intersection_coordinates(baza, pravougaonik))
-                TP += presek
-            
-            i = 0
-            for i in range(i, len(preseci_preseka)):
-                j = i + 1
-                for j in range(j, len(preseci_preseka)):
-                    TP -= area(preseci_preseka[i], preseci_preseka[j])
+            baza_x = baza[0]
+            baza_y = baza[1]
+        
+            while baza_x <= baza[2]:
+                while baza_y <= baza[3]:
+                    TP += pripadanje_piksela(baza_x, baza_y, textboxes)
+                    #print(baza_x)
+                    #print(baza_y)
+                    baza_y += 1
+                baza_y = baza[1]
+                baza_x += 1
 
-            '''
-            for (sx1,sy1,ex1,ey1) in textboxes:
-                detektovano = Rectangle(sx1, sy1, ex1, ey1)
-
-                povrsDetekt += (ex1-sx1)*(ey1-sy1)#
-                TP += area(baza, detektovano)#
-            '''
             FN = povrsBaza-TP
             FP = povrsDetekt-TP
             TN = povrsSlika-TP-FN-FP
@@ -176,19 +173,7 @@ def endtoend(iteracija, granica):
                 preostalovreme = str(int(preostalovreme))+" s"
             print_progress_bar(brojac, ukupno, prefix=(
                 "\t"+link+"\t"+str(iteracija)+"\t"), suffix=("\t"+preostalovreme+"\t"+str(granica)+"\t"))
-
-            """
-            prikaz=img.copy()
-            for (start_x, start_y, end_x, end_y) in textboxes:
-                cv.rectangle(
-                    prikaz, (start_x, start_y), (end_x, end_y), (255, 255, 0), 2
-                )
-            img_name = os.path.join(
-                '..', 'RezultatiBrazil', f"{fajl.split('.')[0]}_{iteracija}.jpg")
-            prikaz_slika = Image.fromarray(prikaz)
-            prikaz_slika.save(img_name)
-            """
-            
+                         
     return(iou, tpr, fpr)
 
 
@@ -196,16 +181,17 @@ text_file = open("Rezultati.txt", "w")
 IOU = []
 TPR = []
 FPR = []
-link = os.path.join('..', 'benchmarks', 'endtoend', 'fejk')
+link = os.path.join('..', 'MegaCrkotina')
 text_file.write(
     link+'\t'+str(int(len(os.listdir(os.path.join(link, '')))/2))+'\n')
 text_file.flush()
 
-first = 1
-last = 99
+first = 0
+last = 100
+delta=1/(last-first)
 program_start = time.time()
 for iteracija in range(first, last+1, 1):
-    granica = round(0.01*iteracija, 2)
+    granica = round(delta*iteracija, 2)
     start = time.time()
     iou, tpr, fpr = endtoend(iteracija, granica)
     vreme = time.time()-start
@@ -220,43 +206,45 @@ for iteracija in range(first, last+1, 1):
     text_file.write("\n")
     prosecnovreme = vreme/len(iou)
 
-    # plt.figure()
-    #plt.hist(iou, bins='auto')
-    #plt.savefig(os.path.join('..', 'Rezultati', f'Rezultati_{iteracija}_histogram.jpg'))
-
-    text_file.write(str(round(_iou, 2))+"\t"+str(round(_tpr, 2))+"\t" +
-                    str(round(_fpr, 2))+"\t"+str(len(iou))+"\t"+str(granica)+"\t\n")
+    text_file.write(str(iteracija)+'\t'+str(round(_iou, 2))+"\t"+str(round(_tpr, 2))+"\t" +
+                    str(round(_fpr, 2))+"\t"+str(granica)+"\t\n")
     text_file.write("Prosecno vreme po slici: "+str(round(prosecnovreme, 2)
                                                     )+" s ("+str(round(vreme/60, 2))+" min)\n")
     text_file.flush()
 
+print('\n')
 program_run_time = time.time()-program_start
 sati = program_run_time/60/60
 minuti = program_run_time/60 % 60
 sekunde = program_run_time % 60
 
 _IOU = sum(IOU)/len(IOU)
-text_file.write("\n"+str(round(_IOU, 2))+"%\t"+str(int(sati)) +
+text_file.write("\n"+str(round(_IOU, 2))+"%\t"+str(int(program_run_time/(first+last)/len(os.listdir(os.path.join(link, '')))/2))+"\t"+str(int(sati)) +
                 "h\t"+str(int(minuti))+"min\t"+str(int(sekunde))+"s\n")
 text_file.close()
 
+x=np.arange(0, 1 + delta, delta).tolist()
+
 fig = plt.figure()
-plt.plot(range(0, len(TPR)), TPR)
-fig.suptitle(link+"   TPR")
-plt.xlabel('Granica sigurnosit OCR-a [*10]')
+plt.plot(x, TPR)
+fig.suptitle("TPR")
+plt.ylim(0, 100)
+plt.xlabel('Nivo sigurnosti detekcije OCR-a')
 plt.ylabel('TPR [%]')
 fig.savefig(os.path.join('..', 'Rezultati', 'TPR.svg'))
 
 fig = plt.figure()
-plt.plot(range(0, len(FPR)), FPR)
-fig.suptitle(link+"   FPR")
-plt.xlabel('Granica sigurnosit OCR-a [*10]')
+plt.plot(x, FPR)
+fig.suptitle("FPR")
+plt.ylim(0, 100)
+plt.xlabel('Nivo sigurnosti detekcije OCR-a')
 plt.ylabel('FPR [%]')
 fig.savefig(os.path.join('..', 'Rezultati', 'FPR.svg'))
 
 fig = plt.figure()
 plt.plot(FPR, TPR)
-fig.suptitle(link+"   ROC")
+fig.suptitle("ROC")
+plt.ylim(0, 100)
 plt.xlabel('FPR [%]')
 plt.ylabel('TPR [%]')
 fig.savefig(os.path.join('..', 'Rezultati', 'ROC.svg'))

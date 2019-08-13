@@ -10,12 +10,8 @@ from collections import namedtuple
 
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
-CRTAJ = False
-if CRTAJ:
-    import pytesseract
-
-
 def obrada_blackhat(img):
+    #Trenutni algoritam
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     hue, saturation, value = cv2.split(hsv)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
@@ -31,6 +27,7 @@ def obrada_blackhat(img):
     return(canny_thresh)
 
 def obrada_canny_overlap(img):
+    #Eksperimentalni algoritam
     gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     gauss=cv2.GaussianBlur(img,(5,5),0)
     gaussgray=cv2.GaussianBlur(gray,(5,5),0)
@@ -40,6 +37,7 @@ def obrada_canny_overlap(img):
     return(overlap)
 
 def obrada_canny_stari(img):
+    #Prvi algoritam
     img = cv.normalize(img, img, 0, 255, cv.NORM_MINMAX)
     img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     meanbright,_,_,_=cv.mean(img)
@@ -51,14 +49,13 @@ def obrada_canny_stari(img):
     img1 = cv2.dilate(img1, (3,3),10)
     return(img1)
 
+def Povrsina(pravougaonik):
+    #Izracunavanje povrsine Rectangle objekta (namedTuple)
+    return abs(pravougaonik[2] - pravougaonik[0]) * abs(pravougaonik[3] - pravougaonik[1])
 
 def area(a: namedtuple, b: namedtuple) -> int:
-    """
-    Funkcija koja racuna povrsinu preseka dva pravougaonika
-    :param a:
-    :param b:
-    :return:
-    """
+    #Funkcija koja racuna povrsinu preseka dva pravougaonika
+    
     cetiri_tacke = [
         [a.xmin, a.ymin],
         [a.xmax, a.ymax],
@@ -100,25 +97,38 @@ def area(a: namedtuple, b: namedtuple) -> int:
     arrx.sort()
     return (arrx[2] - arrx[1]) * (arry[2] - arry[1])
 
+def intersection_coordinates(pravougaonik1, pravougaonik2):
+    # vraca dve koordinate pravougaonika preseka
+    niz_x_koordinata = [pravougaonik1[0], pravougaonik1[2],
+                        pravougaonik2[0], pravougaonik2[2]]
+
+    niz_y_koordinata = [pravougaonik1[1], pravougaonik1[3],
+                        pravougaonik2[1], pravougaonik2[3]]
+
+    niz_x_koordinata.sort()
+    niz_y_koordinata.sort()
+
+    return (niz_x_koordinata[1], niz_y_koordinata[1], niz_x_koordinata[2], niz_y_koordinata[2])
 
 def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█'):
+    #Iscrtava progress bar
     percent = ("{0:." + str(decimals) + "f}").format(100 *
                                                      (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
     print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end='\r')
-    if iteration == total:
-        print('')
 
+def pripadanje_piksela(x, y, lista):
+    #Odredjuje da li pixel pripada nekom od pravougaonika u unetoj listi (namedTuple list)
+    for pravougaonik in lista:
+        if x >= pravougaonik[0] and x <= pravougaonik[2] and y >= pravougaonik[1] and y <= pravougaonik[3]:
+            return 1
+    return 0
 
-def merge(textbox1: list, textbox2: list) -> tuple:
-    """
+def merge(textbox1: tuple, textbox2: tuple) -> tuple:
+    #Spajanje dva pravougaonika (Tuple)
 
-    :param textbox1:
-    :param textbox2:
-    :return:
-    """
-    textbox3: list = []
+    textbox3: tuple = []
     if textbox1[0] < textbox2[0]:
         textbox3.append(textbox1[0])
         textbox3.append(textbox1[1])
@@ -135,7 +145,7 @@ def merge(textbox1: list, textbox2: list) -> tuple:
 
 def histogrami(img, sx, sy, ex, ey):
     """
-
+    Vraca srednje vrednosti Hue Saturation i Value dela slike img definisanim koordinatama sx,sy,ex,ey
     :param img:
     :param sx:
     :param sy:
@@ -165,13 +175,28 @@ def tablica(img: Image, name, granica ):
     flag_presek = 1
     orig = img.copy()
     kopija = orig.copy()
-
-    if CRTAJ:
-        prikaz = orig.copy()
+    height, width = img.shape[:2]
 
     textboxes = []
     # Granica sigurnosti OCR
     textboxes = text_detection.text_detection(img, granica)
+
+    textboxes1=[]
+    for (sx1,sy1,ex1,ey1) in textboxes:
+            
+        sx1=max(0,sx1)
+        sy1=max(0,sy1)
+        ex1=max(0,ex1)
+        ey1=max(0,ey1)
+
+        sx1=min(width,sx1)
+        sy1=min(height,sy1)
+        ex1=min(width,ex1)
+        ey1=min(height,ey1)
+                
+        textboxes1.append((sx1,sy1,ex1,ey1))
+            
+    textboxes=textboxes1.copy()
         
 
     if len(textboxes) > 1:
@@ -200,44 +225,14 @@ def tablica(img: Image, name, granica ):
         processing_out, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE
     )
 
-    if CRTAJ:
-        height, width = img.shape[:2]
-        blank_image = np.zeros((height, width, 3), np.uint8)
-        blank_image = cv2.cvtColor(blank_image, cv2.COLOR_BGR2GRAY)
-        cv2.drawContours(blank_image, contours, -1, (255, 255, 255), 1)
-        blank_image = cv2.cvtColor(blank_image, cv2.COLOR_GRAY2RGB)
-        blanksave = Image.fromarray(blank_image)
-        img_name = os.path.join('..', 'RezultatiBrazil', f"{name}_ivice.jpg")
-        blanksave.save(img_name)
-
     dobre_konture = []
     moguce_tablice = []
-
-    if CRTAJ:
-        cv.drawContours(prikaz, contours, -1, (0, 0, 255), 1)
-
-        for (start_x, start_y, end_x, end_y) in textboxes:
-            cv.rectangle(
-                prikaz, (start_x, start_y), (end_x, end_y), (255, 255, 0), 2
-            )
 
     for contour in contours:
         (x, y, w, h) = cv2.boundingRect(contour)
 
-        if CRTAJ:
-            overlay = prikaz.copy()
-            cv2.rectangle(overlay, (x, y), (x+w, y+h), (0, 255, 0), 1)
-            alpha = 0.7
-            prikaz = cv2.addWeighted(overlay, alpha, prikaz, 1 - alpha, 0)
-
         if 1.5 <= (w/h) <= 10 and 1000 > w > 100 and 1000 > h > 5:
-            if CRTAJ:
-                cv2.rectangle(prikaz, (x, y), (x+w, y+h), (255, 0, 0), 2)
             dobre_konture.append(contour)
-
-    font = cv2.FONT_HERSHEY_SIMPLEX
-
-    #skorovi = []
 
     for contour in dobre_konture:
         A = 0
@@ -254,21 +249,9 @@ def tablica(img: Image, name, granica ):
             A = max(A, prekrivena_povrs_konture *
                     100 + prekrivena_povrs_texta * 100)
 
-            # if area(r, bound)/boundarea*100 + area(r, bound)/((end_x-start_x)*(end_y-start_y)) * 100 > A:
-            #    A = area(r,bound)/boundarea*100 + area(r, bound)/((end_x-start_x)*(end_y-start_y)) * 70
-
-        # skorovi.append(A)
         moguce_tablice.append((A, contour))
 
-        if CRTAJ:
-            cv2.putText(prikaz, str(round(score, 0)), (x, y),
-                        font, 0.4, (0, 0, 0), 2, cv2.LINE_AA)
-            img_name = os.path.join(
-                '..', 'RezultatiBrazil', f"{name}_detekcija.jpg")
-            prikaz_slika = Image.fromarray(prikaz)
-            prikaz_slika.save(img_name)
-
-        skorovi = []
+    skorovi = []
 
     if len(moguce_tablice) > 0:
         maxscore, tablica = moguce_tablice[0]
@@ -304,52 +287,34 @@ def tablica(img: Image, name, granica ):
                     pozicija2 = k
                 k += 1
 
-    if CRTAJ:
-        orig = cv.cvtColor(orig, cv.COLOR_BGR2RGB)
-
     if flag_presek == 0 and len(textboxes)>0:
         (x1, y1, w1, h1) = cv2.boundingRect(tablica)
         (_, sat1, _) = histogrami(img, x1, y1, x1 + w1, y1 + h1)
         (_, sat2, _) = histogrami(
             img, textboxes[pozicija2][0], textboxes[pozicija2][1], textboxes[pozicija2][2], textboxes[pozicija2][3])
 
-        """
-        if sat1 < sat2:
-            #orig=orig[y1:y1+h1,x1:x1+w1]
-        else:
-            #orig=orig[textboxes[pozicija2][1]:textboxes[pozicija2][3],textboxes[pozicija2][0]:textboxes[pozicija2][2]]    
-        """
-
         if sat2 >= sat1:
             (x1, y1, w1, h1) = tuple(textboxes[pozicija2])
     else:
         (x1, y1, w1, h1) = cv2.boundingRect(tablica)
 
-    if CRTAJ:
-        text = pytesseract.image_to_string(orig)
-    else:
-        text = ""
 
-    if CRTAJ:
-        orig = orig[y1:y1+h1, x1:x1+w1]
-        orig = cv.cvtColor(orig, cv.COLOR_BGR2RGB)
-        img_name = os.path.join('..', 'RezultatiBrazil', f"{name}_tablica.jpg")
-        origslika = Image.fromarray(prikaz)
-        origslika.save(img_name)
-
-    return((x1, y1, x1+w1, y1+h1), text)
+    return((x1, y1, x1+w1, y1+h1))
 
 def endtoend(iteracija, granica):
+    #brojac odradjenih slika
     brojac = 0
     iou = []
     tpr = []
     fpr = []
     ukupno = len(os.listdir(os.path.join(link, '')))/2
-    print_progress_bar(0, 100, prefix=("\t" + os.path.join(link, '') + "\t"))
-    #text_file.flush()
-
+    print_progress_bar(0, 100, prefix=(
+        "\t"+link+"\t"+str(iteracija)+"\t"), suffix=("\t∞\t"+str(granica)+"\t"))
+    
+    #Prolazak kroz svaki .txt fajl u folderu (pogledati format .txt fajl-a)
     for filename in os.listdir(os.path.join(link, '')):
         if filename.endswith(".txt"):
+            #Citanje podataka iz fajla i ucitavanje slike
             f = open(os.path.join(link, f"{filename}"), "r")
             txt = f.read().split('\t')
             fajl = txt[0]
@@ -357,20 +322,24 @@ def endtoend(iteracija, granica):
             name = fajl.split('.')[0]
             sx = int(txt[1])
             sy = int(txt[2])
+            #Pazi na bazu koju koristis jer od toga zavisi da li je ovo
+            #w i h ili koordinate donjeg desnog temena pravougaonika
             w = int(txt[3])
             h = int(txt[4])
-            ex = sx+w
-            ey = sy+h
-            (sx1, sy1, ex1, ey1), text = tablica(img, name, granica)
-            #(avgHue, avgSat, avgVal) = histogrami(img, sx1, sy1, ex1, ey1)
+            #isto sto i gore napisano
+            ex = sx + w
+            ey = sy + h
+            #detektcija tablice
+            (sx1, sy1, ex1, ey1) = tablica(img, name, granica)
             brojac += 1
+            #definisanje pravougaonika i povrsina (Rectangle->namedTuple)
             detektovano = Rectangle(sx1, sy1, ex1, ey1)
             baza = Rectangle(sx, sy, ex, ey)
-            #presek = area(baza, detektovano)
             height, width = img.shape[:2]
             povrsBaza = (ex-sx)*(ey-sy)
             povrsDetekt = (ex1-sx1)*(ey1-sy1)
             povrsSlika = width*height
+            #izracunavanje Karakteristika
             TP = area(baza, detektovano)
             FN = povrsBaza-TP
             FP = povrsDetekt-TP
@@ -378,43 +347,45 @@ def endtoend(iteracija, granica):
             TPR = TP/(TP+FN)*100
             FPR = FP/(FP+TN)*100
             IOU = TP/(FP+TP+FN)*100
-
+            #dodavanje na niz karakteristika (globalna varijabla)
             iou.append(IOU)
             tpr.append(TPR)
             fpr.append(FPR)
-
-            #text_file.write(str(len(iou))+"\t"+name+"\t"+str(round(IOU, 2))+"\t"+str(round(TPR, 2))+"\t" + str(round(
-            #    FPR, 2))+"\t"+str(round(granica, 2))+"\t"+str(round(avgSat, 1))+"\n")
-            #text_file.flush()
-
+            #izracunavanje preostalog vremena za trenutnu iteraciju
             dosad = time.time()-start
             prosecnovreme = dosad/len(iou)
             preostalovreme = (ukupno-brojac) * prosecnovreme
             if preostalovreme >= 60:
-                preostalovreme = str(round(preostalovreme/60, 1)) + " min"
+                preostalovreme = str(int(preostalovreme/60)) + " min"
             else:
-                preostalovreme = str(round(preostalovreme, 1))+" s"
+                preostalovreme = str(int(preostalovreme))+" s"
+            #ispisivanje progress bar-a sa svim potrebnim podacima, link ,iteracija, preostalo vreme i granica
             print_progress_bar(brojac, ukupno, prefix=(
                 "\t"+link+"\t"+str(iteracija)+"\t"), suffix=("\t"+preostalovreme+"\t"+str(granica)+"\t"))
     return(iou, tpr, fpr)
-
-link = os.path.join('..', 'benchmarks', 'endtoend', 'eu')
+#ucitavanje fajla za rezultate
 text_file = open("Rezultati.txt", "w")
-#text_file = open("Rezultati.txt", "a")
-
-text_file.write(link+'\n')
+IOU = []
+TPR = []
+FPR = []
+#link do slika i upisivanje istog u fajl za rezultate
+link = os.path.join('..', 'benchmarks','endtoend','eu')
+text_file.write(
+    link+'\t'+str(int(len(os.listdir(os.path.join(link, '')))/2))+'\n')
 text_file.flush()
 
-IOU=[]
-TPR=[]
-FPR=[]
-first=0
-last=20
-
-for iteracija in range(first,last+1,1):
-    granica=round(1/(last-first)*iteracija,2)
+#definisanje broja iteracija ==> gustina prelazenja preko intervala [0,1]
+first = 0
+last = 100
+#promena granice za jednu iteraciju
+delta=1/(last-first)
+#merenje vremena od pocetka izvrsavanja programa (izostavljaci inicijalni period, za preciznije merenje samog algoritma)
+program_start = time.time()
+for iteracija in range(first, last+1, 1):
+    #Nivo sigurnosti detekcije OCR-a
+    granica = round(delta*iteracija, 2)
     start = time.time()
-    iou, tpr, fpr = endtoend(iteracija,granica)
+    iou, tpr, fpr = endtoend(iteracija, granica)
     vreme = time.time()-start
 
     _iou = sum(iou)/len(iou)
@@ -427,27 +398,48 @@ for iteracija in range(first,last+1,1):
     text_file.write("\n")
     prosecnovreme = vreme/len(iou)
 
-    plt.figure()
-    plt.hist(iou, bins='auto')
-    plt.savefig(os.path.join('..', 'Rezultati', f'Rezultati_{iteracija}_histogram.jpg'))
-
-    text_file.write(str(round(_iou, 2))+"\t"+str(round(_tpr, 2))+"\t" + str(round(
-        _fpr, 2))+"\t"+str(len(granica))+"\t"+str(iou)+"\t\n")
+    text_file.write(str(iteracija)+'\t'+str(round(_iou, 2))+"\t"+str(round(_tpr, 2))+"\t" +
+                    str(round(_fpr, 2))+"\t"+str(granica)+"\t\n")
     text_file.write("Prosecno vreme po slici: "+str(round(prosecnovreme, 2)
                                                     )+" s ("+str(round(vreme/60, 2))+" min)\n")
     text_file.flush()
 
-_IOU=sum(IOU)/len(IOU)
-text_file.write("\n"+str(round(_IOU,2)))
+print('\n')
+program_run_time = time.time()-program_start
+sati = program_run_time/60/60
+minuti = program_run_time/60 % 60
+sekunde = program_run_time % 60
+
+_IOU = sum(IOU)/len(IOU)
+text_file.write("\n"+str(round(_IOU, 2))+"%\t"+str(int(program_run_time/(first+last)/len(os.listdir(os.path.join(link, '')))/2))+"\t"+str(int(sati)) +
+                "h\t"+str(int(minuti))+"min\t"+str(int(sekunde))+"s\n")
 text_file.close()
-plt.figure()
-plt.scatter(range(0,len(TPR)),TPR)
-plt.savefig(os.path.join('..', 'Rezultati', 'TPR.jpg'))
-plt.figure()
-plt.scatter(range(0,len(FPR)),FPR)
-plt.savefig(os.path.join('..', 'Rezultati', 'FPR.jpg'))
-plt.figure()
+
+x=np.arange(0, 1 + delta, delta).tolist()
+
+fig = plt.figure()
+plt.plot(x, TPR)
+plt.scatter(x,TPR)
+fig.suptitle("TPR")
+plt.ylim(0, 100)
+plt.xlabel('Nivo sigurnosti detekcije OCR-a')
+plt.ylabel('TPR [%]')
+fig.savefig(os.path.join('..', 'Rezultati', 'TPR.svg'))
+
+fig = plt.figure()
+plt.plot(x, FPR)
+plt.scatter(x,FPR)
+fig.suptitle("FPR")
+plt.ylim(0, 100)
+plt.xlabel('Nivo sigurnosti detekcije OCR-a')
+plt.ylabel('FPR [%]')
+fig.savefig(os.path.join('..', 'Rezultati', 'FPR.svg'))
+
+fig = plt.figure()
+plt.plot(FPR, TPR)
 plt.scatter(FPR,TPR)
-plt.savefig(os.path.join('..', 'Rezultati', 'ROC.jpg'))
-
-
+fig.suptitle("ROC")
+plt.ylim(0, 100)
+plt.xlabel('FPR [%]')
+plt.ylabel('TPR [%]')
+fig.savefig(os.path.join('..', 'Rezultati', 'ROC.svg'))
