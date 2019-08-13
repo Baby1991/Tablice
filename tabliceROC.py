@@ -144,15 +144,9 @@ def merge(textbox1: tuple, textbox2: tuple) -> tuple:
 
 
 def histogrami(img, sx, sy, ex, ey):
-    """
-    Vraca srednje vrednosti Hue Saturation i Value dela slike img definisanim koordinatama sx,sy,ex,ey
-    :param img:
-    :param sx:
-    :param sy:
-    :param ex:
-    :param ey:
-    :return:
-    """
+    
+    #Vraca srednje vrednosti Hue Saturation i Value dela slike img definisanim koordinatama sx,sy,ex,ey
+    
     img = img[sy:ey, sx:ex]
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     hue, saturation, value = cv2.split(hsv)
@@ -165,12 +159,9 @@ def histogrami(img, sx, sy, ex, ey):
 
 
 def tablica(img: Image, name, granica ):
-    """
+    #Izdvaja tablicu sa slike img
+    #granica ==> Granica sigurnosti OCR-a
 
-    :param img:
-    :param name:
-    :return:
-    """
     # Flag za proveru postojanja preseka
     flag_presek = 1
     orig = img.copy()
@@ -178,9 +169,10 @@ def tablica(img: Image, name, granica ):
     height, width = img.shape[:2]
 
     textboxes = []
-    # Granica sigurnosti OCR
+    #Detekcija text-a na slici - Vraca listu tuplova koji sadrze koordinate detektovanih pravougaonika koji sadrze tekst
     textboxes = text_detection.text_detection(img, granica)
 
+    #Svi pravougaonici kojima koordinate izlaze van slike se vracaju u sliku
     textboxes1=[]
     for (sx1,sy1,ex1,ey1) in textboxes:
             
@@ -198,7 +190,8 @@ def tablica(img: Image, name, granica ):
             
     textboxes=textboxes1.copy()
         
-
+    #prolazak kroz ocr pravougaonike i provera da li mogu nepotrebni da se izbace
+    #ili da li mogu da se spoje zalejno ukoliiko su dovoljno blizu
     if len(textboxes) > 1:
         i = 0
         while i < len(textboxes):
@@ -224,16 +217,17 @@ def tablica(img: Image, name, granica ):
     (contours, __) = cv.findContours(
         processing_out, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE
     )
-
+    #liste potencijalnih kandidata
     dobre_konture = []
     moguce_tablice = []
-
+    #glavno filtriranje crvenih pravougaonika
     for contour in contours:
         (x, y, w, h) = cv2.boundingRect(contour)
 
         if 1.5 <= (w/h) <= 10 and 1000 > w > 100 and 1000 > h > 5:
             dobre_konture.append(contour)
-
+    #glavni deo selekcije kandidata pomocu sistema skorovanja
+    #prema preseku crvenih i zutih pravougaonika
     for contour in dobre_konture:
         A = 0
         score = 0
@@ -252,7 +246,9 @@ def tablica(img: Image, name, granica ):
         moguce_tablice.append((A, contour))
 
     skorovi = []
-
+    #vracanje kandidata sa najvecim skorom ili ukoliko isti ne
+    #postoji rade se histogrami na HSV verziji slike i na osnovu
+    #toga se vraca tablica
     if len(moguce_tablice) > 0:
         maxscore, tablica = moguce_tablice[0]
         for (score, contour) in moguce_tablice:
@@ -286,7 +282,8 @@ def tablica(img: Image, name, granica ):
                     minsat = sat
                     pozicija2 = k
                 k += 1
-
+    #provera da li postoji bilo kakav presek izmedju pravougaonika
+    #Ukoliko ne postoji -> histogrami i saturacija
     if flag_presek == 0 and len(textboxes)>0:
         (x1, y1, w1, h1) = cv2.boundingRect(tablica)
         (_, sat1, _) = histogrami(img, x1, y1, x1 + w1, y1 + h1)
