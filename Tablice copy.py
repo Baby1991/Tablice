@@ -109,8 +109,8 @@ def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, lengt
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
     print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end='\r')
-    if iteration == total:
-        print('\n')
+    #if iteration == total:
+    #    print('\n')
 
 
 def merge(textbox1: list, textbox2: list) -> tuple:
@@ -249,9 +249,9 @@ def tablica(img: Image, name):
             prekrivena_povrs_texta = area(
                 r, bound)/((end_x-start_x)*(end_y-start_y))
             prekrivena_povrs_konture = area(r, bound)/boundarea
-            A = max(A, prekrivena_povrs_konture *
-                    100 + prekrivena_povrs_texta * 100)
-
+            #A = max(A, prekrivena_povrs_konture *
+            #        100 + prekrivena_povrs_texta * 100)
+            A += prekrivena_povrs_konture * 100 + prekrivena_povrs_texta * 100
         moguce_tablice.append((A, contour))
 
         if CRTAJ:
@@ -324,7 +324,7 @@ def tablica(img: Image, name):
 
 text_file = open("Rezultati.txt", "w")
 #text_file = open("Rezultati.txt", "a")
-link = os.path.join('..', 'UFPR-ALPR', 'full')
+link = os.path.join('..', 'UFPR-ALPR', 'UFPR-ALPR dataset','training','track0001')
 text_file.write(link+'\n')
 
 
@@ -406,6 +406,7 @@ plt.savefig('Rezultati_histogram.jpg')
 
 text_file.write(str(round(_iou, 2))+"\t"+str(round(_tpr, 2))+"\t" + str(round(
     _fpr, 2))+"\t"+str(len(iou))+"\t\n")
-text_file.write(+str(round(prosecnovreme, 2)) +
+text_file.write(str(round(prosecnovreme, 2)) +
                 " s ("+str(round(vreme/60, 2))+" min)\n\n")
 text_file.close()
+print('\n')
