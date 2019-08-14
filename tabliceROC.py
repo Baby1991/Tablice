@@ -10,8 +10,9 @@ from collections import namedtuple
 
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
+
 def obrada_blackhat(img):
-    #Trenutni algoritam
+    # Trenutni algoritam
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     hue, saturation, value = cv2.split(hsv)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
@@ -26,36 +27,40 @@ def obrada_blackhat(img):
     canny_thresh = cv2.Canny(thresh, 0, 200, 10)
     return(canny_thresh)
 
+
 def obrada_canny_overlap(img):
-    #Eksperimentalni algoritam
-    gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    gauss=cv2.GaussianBlur(img,(5,5),0)
-    gaussgray=cv2.GaussianBlur(gray,(5,5),0)
-    gaussCanny=cv2.Canny(gauss,100,200,10)
-    gaussCannygray=cv2.Canny(gaussgray,0,200,10)
-    overlap=cv2.bitwise_and(gaussCanny,gaussCannygray)
+    # Eksperimentalni algoritam
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gauss = cv2.GaussianBlur(img, (5, 5), 0)
+    gaussgray = cv2.GaussianBlur(gray, (5, 5), 0)
+    gaussCanny = cv2.Canny(gauss, 100, 200, 10)
+    gaussCannygray = cv2.Canny(gaussgray, 0, 200, 10)
+    overlap = cv2.bitwise_and(gaussCanny, gaussCannygray)
     return(overlap)
 
+
 def obrada_canny_stari(img):
-    #Prvi algoritam
+    # Prvi algoritam
     img = cv.normalize(img, img, 0, 255, cv.NORM_MINMAX)
     img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    meanbright,_,_,_=cv.mean(img)
-    img=cv.blur(img,(5,5))
+    meanbright, _, _, _ = cv.mean(img)
+    img = cv.blur(img, (5, 5))
     thres1, img1 = cv2.threshold(img, meanbright, 255, 0)
-    img1=cv.Canny(img,100,200,10)
-    img1 = cv2.dilate(img1, (3,3),1)
-    img1 = cv2.erode(img1, (3,3),1)
-    img1 = cv2.dilate(img1, (3,3),10)
+    img1 = cv.Canny(img, 100, 200, 10)
+    img1 = cv2.dilate(img1, (3, 3), 1)
+    img1 = cv2.erode(img1, (3, 3), 1)
+    img1 = cv2.dilate(img1, (3, 3), 10)
     return(img1)
 
+
 def Povrsina(pravougaonik):
-    #Izracunavanje povrsine Rectangle objekta (namedTuple)
+    # Izracunavanje povrsine Rectangle objekta (namedTuple)
     return abs(pravougaonik[2] - pravougaonik[0]) * abs(pravougaonik[3] - pravougaonik[1])
 
+
 def area(a: namedtuple, b: namedtuple) -> int:
-    #Funkcija koja racuna povrsinu preseka dva pravougaonika
-    
+    # Funkcija koja racuna povrsinu preseka dva pravougaonika
+
     cetiri_tacke = [
         [a.xmin, a.ymin],
         [a.xmax, a.ymax],
@@ -97,6 +102,7 @@ def area(a: namedtuple, b: namedtuple) -> int:
     arrx.sort()
     return (arrx[2] - arrx[1]) * (arry[2] - arry[1])
 
+
 def intersection_coordinates(pravougaonik1, pravougaonik2):
     # vraca dve koordinate pravougaonika preseka
     niz_x_koordinata = [pravougaonik1[0], pravougaonik1[2],
@@ -110,23 +116,26 @@ def intersection_coordinates(pravougaonik1, pravougaonik2):
 
     return (niz_x_koordinata[1], niz_y_koordinata[1], niz_x_koordinata[2], niz_y_koordinata[2])
 
+
 def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█'):
-    #Iscrtava progress bar
+    # Iscrtava progress bar
     percent = ("{0:." + str(decimals) + "f}").format(100 *
                                                      (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
     print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end='\r')
 
+
 def pripadanje_piksela(x, y, lista):
-    #Odredjuje da li pixel pripada nekom od pravougaonika u unetoj listi (namedTuple list)
+    # Odredjuje da li pixel pripada nekom od pravougaonika u unetoj listi (namedTuple list)
     for pravougaonik in lista:
         if x >= pravougaonik[0] and x <= pravougaonik[2] and y >= pravougaonik[1] and y <= pravougaonik[3]:
             return 1
     return 0
 
+
 def merge(textbox1: tuple, textbox2: tuple) -> tuple:
-    #Spajanje dva pravougaonika (Tuple)
+    # Spajanje dva pravougaonika (Tuple)
 
     textbox3: tuple = []
     if textbox1[0] < textbox2[0]:
@@ -144,9 +153,9 @@ def merge(textbox1: tuple, textbox2: tuple) -> tuple:
 
 
 def histogrami(img, sx, sy, ex, ey):
-    
-    #Vraca srednje vrednosti Hue Saturation i Value dela slike img definisanim koordinatama sx,sy,ex,ey
-    
+
+    # Vraca srednje vrednosti Hue Saturation i Value dela slike img definisanim koordinatama sx,sy,ex,ey
+
     img = img[sy:ey, sx:ex]
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     hue, saturation, value = cv2.split(hsv)
@@ -158,9 +167,9 @@ def histogrami(img, sx, sy, ex, ey):
     return avg_hue, avg_sat, avg_val
 
 
-def tablica(img: Image, name, granica ):
-    #Izdvaja tablicu sa slike img
-    #granica ==> Granica sigurnosti OCR-a
+def tablica(img: Image, name, granica):
+    # Izdvaja tablicu sa slike img
+    # granica ==> Granica sigurnosti OCR-a
 
     # Flag za proveru postojanja preseka
     flag_presek = 1
@@ -169,29 +178,29 @@ def tablica(img: Image, name, granica ):
     height, width = img.shape[:2]
 
     textboxes = []
-    #Detekcija text-a na slici - Vraca listu tuplova koji sadrze koordinate detektovanih pravougaonika koji sadrze tekst
+    # Detekcija text-a na slici - Vraca listu tuplova koji sadrze koordinate detektovanih pravougaonika koji sadrze tekst
     textboxes = text_detection.text_detection(img, granica)
 
-    #Svi pravougaonici kojima koordinate izlaze van slike se vracaju u sliku
-    textboxes1=[]
-    for (sx1,sy1,ex1,ey1) in textboxes:
-            
-        sx1=max(0,sx1)
-        sy1=max(0,sy1)
-        ex1=max(0,ex1)
-        ey1=max(0,ey1)
+    # Svi pravougaonici kojima koordinate izlaze van slike se vracaju u sliku
+    textboxes1 = []
+    for (sx1, sy1, ex1, ey1) in textboxes:
 
-        sx1=min(width,sx1)
-        sy1=min(height,sy1)
-        ex1=min(width,ex1)
-        ey1=min(height,ey1)
-                
-        textboxes1.append((sx1,sy1,ex1,ey1))
-            
-    textboxes=textboxes1.copy()
-        
-    #prolazak kroz ocr pravougaonike i provera da li mogu nepotrebni da se izbace
-    #ili da li mogu da se spoje zalejno ukoliiko su dovoljno blizu
+        sx1 = max(0, sx1)
+        sy1 = max(0, sy1)
+        ex1 = max(0, ex1)
+        ey1 = max(0, ey1)
+
+        sx1 = min(width, sx1)
+        sy1 = min(height, sy1)
+        ex1 = min(width, ex1)
+        ey1 = min(height, ey1)
+
+        textboxes1.append((sx1, sy1, ex1, ey1))
+
+    textboxes = textboxes1.copy()
+
+    # prolazak kroz ocr pravougaonike i provera da li mogu nepotrebni da se izbace
+    # ili da li mogu da se spoje zalejno ukoliiko su dovoljno blizu
     if len(textboxes) > 1:
         i = 0
         while i < len(textboxes):
@@ -210,24 +219,25 @@ def tablica(img: Image, name, granica ):
                 j += 1
             i += 1
 
-            
-    #ALGORITMI OBRADE
-    processing_out=obrada_blackhat(img)
+    # ALGORITMI OBRADE
+    processing_out = obrada_blackhat(img)
 
     (contours, __) = cv.findContours(
         processing_out, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE
     )
-    #liste potencijalnih kandidata
+    # liste potencijalnih kandidata
     dobre_konture = []
     moguce_tablice = []
-    #glavno filtriranje crvenih pravougaonika
+    # glavno filtriranje crvenih pravougaonika
     for contour in contours:
         (x, y, w, h) = cv2.boundingRect(contour)
 
         if 1.5 <= (w/h) <= 10 and 1000 > w > 100 and 1000 > h > 5:
             dobre_konture.append(contour)
-    #glavni deo selekcije kandidata pomocu sistema skorovanja
-    #prema preseku crvenih i zutih pravougaonika
+        else:
+            (x1, y1, w1, h1) = (x, y, w, h)
+    # glavni deo selekcije kandidata pomocu sistema skorovanja
+    # prema preseku crvenih i zutih pravougaonika
     for contour in dobre_konture:
         A = 0
         score = 0
@@ -246,9 +256,9 @@ def tablica(img: Image, name, granica ):
         moguce_tablice.append((A, contour))
 
     skorovi = []
-    #vracanje kandidata sa najvecim skorom ili ukoliko isti ne
-    #postoji rade se histogrami na HSV verziji slike i na osnovu
-    #toga se vraca tablica
+    # vracanje kandidata sa najvecim skorom ili ukoliko isti ne
+    # postoji rade se histogrami na HSV verziji slike i na osnovu
+    # toga se vraca tablica
     if len(moguce_tablice) > 0:
         maxscore, tablica = moguce_tablice[0]
         for (score, contour) in moguce_tablice:
@@ -282,9 +292,10 @@ def tablica(img: Image, name, granica ):
                     minsat = sat
                     pozicija2 = k
                 k += 1
-    #provera da li postoji bilo kakav presek izmedju pravougaonika
-    #Ukoliko ne postoji -> histogrami i saturacija
-    if flag_presek == 0 and len(textboxes)>0:
+    # provera da li postoji bilo kakav presek izmedju pravougaonika
+    # Ukoliko ne postoji -> histogrami i saturacija
+    if flag_presek == 0 and len(textboxes) > 0:
+        
         (x1, y1, w1, h1) = cv2.boundingRect(tablica)
         (_, sat1, _) = histogrami(img, x1, y1, x1 + w1, y1 + h1)
         (_, sat2, _) = histogrami(
@@ -292,14 +303,14 @@ def tablica(img: Image, name, granica ):
 
         if sat2 >= sat1:
             (x1, y1, w1, h1) = tuple(textboxes[pozicija2])
-    else:
+    elif len(moguce_tablice) > 0:
         (x1, y1, w1, h1) = cv2.boundingRect(tablica)
-
 
     return((x1, y1, x1+w1, y1+h1))
 
+
 def endtoend(iteracija, granica):
-    #brojac odradjenih slika
+    # brojac odradjenih slika
     brojac = 0
     iou = []
     tpr = []
@@ -307,11 +318,11 @@ def endtoend(iteracija, granica):
     ukupno = len(os.listdir(os.path.join(link, '')))/2
     print_progress_bar(0, 100, prefix=(
         "\t"+link+"\t"+str(iteracija)+"\t"), suffix=("\t∞\t"+str(granica)+"\t"))
-    
-    #Prolazak kroz svaki .txt fajl u folderu (pogledati format .txt fajl-a)
+
+    # Prolazak kroz svaki .txt fajl u folderu (pogledati format .txt fajl-a)
     for filename in os.listdir(os.path.join(link, '')):
         if filename.endswith(".txt"):
-            #Citanje podataka iz fajla i ucitavanje slike
+            # Citanje podataka iz fajla i ucitavanje slike
             f = open(os.path.join(link, f"{filename}"), "r")
             txt = f.read().split('\t')
             fajl = txt[0]
@@ -319,24 +330,24 @@ def endtoend(iteracija, granica):
             name = fajl.split('.')[0]
             sx = int(txt[1])
             sy = int(txt[2])
-            #Pazi na bazu koju koristis jer od toga zavisi da li je ovo
-            #w i h ili koordinate donjeg desnog temena pravougaonika
+            # Pazi na bazu koju koristis jer od toga zavisi da li je ovo
+            # w i h ili koordinate donjeg desnog temena pravougaonika
             w = int(txt[3])
             h = int(txt[4])
-            #isto sto i gore napisano
+            # isto sto i gore napisano
             ex = sx + w
             ey = sy + h
-            #detektcija tablice
+            # detektcija tablice
             (sx1, sy1, ex1, ey1) = tablica(img, name, granica)
             brojac += 1
-            #definisanje pravougaonika i povrsina (Rectangle->namedTuple)
+            # definisanje pravougaonika i povrsina (Rectangle->namedTuple)
             detektovano = Rectangle(sx1, sy1, ex1, ey1)
             baza = Rectangle(sx, sy, ex, ey)
             height, width = img.shape[:2]
             povrsBaza = (ex-sx)*(ey-sy)
             povrsDetekt = (ex1-sx1)*(ey1-sy1)
             povrsSlika = width*height
-            #izracunavanje Karakteristika
+            # izracunavanje Karakteristika
             TP = area(baza, detektovano)
             FN = povrsBaza-TP
             FP = povrsDetekt-TP
@@ -344,11 +355,11 @@ def endtoend(iteracija, granica):
             TPR = TP/(TP+FN)*100
             FPR = FP/(FP+TN)*100
             IOU = TP/(FP+TP+FN)*100
-            #dodavanje na niz karakteristika (globalna varijabla)
+            # dodavanje na niz karakteristika (globalna varijabla)
             iou.append(IOU)
             tpr.append(TPR)
             fpr.append(FPR)
-            #izracunavanje preostalog vremena za trenutnu iteraciju
+            # izracunavanje preostalog vremena za trenutnu iteraciju
             dosad = time.time()-start
             prosecnovreme = dosad/len(iou)
             preostalovreme = (ukupno-brojac) * prosecnovreme
@@ -356,30 +367,32 @@ def endtoend(iteracija, granica):
                 preostalovreme = str(int(preostalovreme/60)) + " min"
             else:
                 preostalovreme = str(int(preostalovreme))+" s"
-            #ispisivanje progress bar-a sa svim potrebnim podacima, link ,iteracija, preostalo vreme i granica
+            # ispisivanje progress bar-a sa svim potrebnim podacima, link ,iteracija, preostalo vreme i granica
             print_progress_bar(brojac, ukupno, prefix=(
                 "\t"+link+"\t"+str(iteracija)+"\t"), suffix=("\t"+preostalovreme+"\t"+str(granica)+"\t"))
     return(iou, tpr, fpr)
-#ucitavanje fajla za rezultate
+
+
+# ucitavanje fajla za rezultate
 text_file = open("Rezultati.txt", "w")
 IOU = []
 TPR = []
 FPR = []
-#link do slika i upisivanje istog u fajl za rezultate
-link = os.path.join('..', 'benchmarks','endtoend','eu')
+# link do slika i upisivanje istog u fajl za rezultate
+link = os.path.join('..', 'benchmarks','endtoend','fejk')
 text_file.write(
     link+'\t'+str(int(len(os.listdir(os.path.join(link, '')))/2))+'\n')
 text_file.flush()
 
-#definisanje broja iteracija ==> gustina prelazenja preko intervala [0,1]
+# definisanje broja iteracija ==> gustina prelazenja preko intervala [0,1]
 first = 0
-last = 100
-#promena granice za jednu iteraciju
-delta=1/(last-first)
-#merenje vremena od pocetka izvrsavanja programa (izostavljaci inicijalni period, za preciznije merenje samog algoritma)
+last = 1
+# promena granice za jednu iteraciju
+delta = 1/(last-first)
+# merenje vremena od pocetka izvrsavanja programa (izostavljaci inicijalni period, za preciznije merenje samog algoritma)
 program_start = time.time()
 for iteracija in range(first, last+1, 1):
-    #Nivo sigurnosti detekcije OCR-a
+    # Nivo sigurnosti detekcije OCR-a
     granica = round(delta*iteracija, 2)
     start = time.time()
     iou, tpr, fpr = endtoend(iteracija, granica)
@@ -412,11 +425,11 @@ text_file.write("\n"+str(round(_IOU, 2))+"%\t"+str(int(program_run_time/(first+l
                 "h\t"+str(int(minuti))+"min\t"+str(int(sekunde))+"s\n")
 text_file.close()
 
-x=np.arange(0, 1 + delta, delta).tolist()
+x = np.arange(0, 1 + delta, delta).tolist()
 
 fig = plt.figure()
 plt.plot(x, TPR)
-plt.scatter(x,TPR)
+plt.scatter(x, TPR, s=10)
 fig.suptitle("TPR")
 plt.ylim(0, 100)
 plt.xlabel('Nivo sigurnosti detekcije OCR-a')
@@ -425,7 +438,7 @@ fig.savefig(os.path.join('..', 'Rezultati', 'TPR.svg'))
 
 fig = plt.figure()
 plt.plot(x, FPR)
-plt.scatter(x,FPR)
+plt.scatter(x, FPR, s=10)
 fig.suptitle("FPR")
 plt.ylim(0, 100)
 plt.xlabel('Nivo sigurnosti detekcije OCR-a')
@@ -434,9 +447,10 @@ fig.savefig(os.path.join('..', 'Rezultati', 'FPR.svg'))
 
 fig = plt.figure()
 plt.plot(FPR, TPR)
-plt.scatter(FPR,TPR)
+plt.scatter(FPR, TPR, s=10)
 fig.suptitle("ROC")
 plt.ylim(0, 100)
+plt.xlim(0, 100)
 plt.xlabel('FPR [%]')
 plt.ylabel('TPR [%]')
 fig.savefig(os.path.join('..', 'Rezultati', 'ROC.svg'))
