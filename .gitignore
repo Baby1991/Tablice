@@ -622,3 +622,4 @@ __pycache__
 *.jpg
 *.json
 .idea
+.svg
